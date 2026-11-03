@@ -28,6 +28,10 @@ schematic about connectivity.
 - **The committed board is the generated board**: `tools/check_regen.py`, the
   fifth gate, regenerates in a throwaway copy of `tools/` and compares every
   footprint and copper item against `xiao-ac-ssr.kicad_pcb` (18 and 136 today).
+- **The socket rows say which pin is which.** `J1`/`J2` have their own symbol
+  whose pins carry the module's names, and `tools/check_netlist.py` asserts
+  they reach the netlist — so `J1.2 = D1/GPIO3 = GATE_DRV` is in the artifact,
+  not in a comment. See "The socket symbol" below.
 
 ## The XIAO socket (the defect this board inherited)
 
@@ -80,7 +84,9 @@ left column, D0…D6** top to bottom, nearest the mains section, and **J2
 this board uses are **J1 pad 2 = D1/GPIO3 = `GATE_DRV`** (the opto's trigger) and
 **J2 pad 1 / pad 2 = `+5V_XIAO` / `GND`** — i.e. the first two of the right-hand
 column. A row reversed 180° puts the trigger on the wrong pin and swaps 5 V and
-GND, with every net still "correct"; both are now gate failures.
+GND, with every net still "correct"; both are now gate failures. The schematic
+says the same thing in the symbol itself now, not only in a `val` field — see
+"The socket symbol" below.
 
 **Board area: it fitted without growing.** The block sits where the two loose
 sockets were (x 128.72 → 146.52, 3.48 mm from the right edge) — the same
@@ -91,6 +97,78 @@ carried over: 131 track segments and 5 vias instead of 137 and 6, 817 mm of
 copper instead of 794. 11/11 nets and 0 errors / 0 warnings are re-measured
 claims, and `tools/check_regen.py` re-derives the board from the generator to
 prove the committed file is that result.
+
+## The socket symbol (the same defect, one layer up)
+
+`J1`/`J2` were generic `Conn_01x07` symbols as well, so the *schematic* said
+`Pin_2` where the board meant `D1`, and the only thing joining the two was a
+comment — the same shape of defect as the rows 6.10 mm apart: every tool
+passed, and a reviewer had to take the pinout on trust. ERC cannot see it
+either; a renamed pin moves no net. This is the dimmer's pass
+(`xiao-ac-dimmer` `5f3ee7f`) applied here one generation later, with this
+board's own two wired pins — `J1.2 = GATE_DRV`, `J2.1`/`J2.2 = +5V_XIAO`/`GND`.
+
+Each row now has its own symbol whose 7 pins carry the module's own names:
+`D0..D6` on J1, `VBUS, GND, 3V3_OUT, D10, D9/BOOT, D8, D7` on J2, pin 1 at the
+USB-C end on both. The exported netlist carries them
+(`(node (ref "J1") (pin "2") (pinfunction "D1") ...)`), and
+`tools/check_netlist.py` asserts all 14 against `gen_sch.XIAO_ROWS`.
+`tools/tests/test_pin_names.py` breaks that three ways and requires the report:
+a pin renamed (nothing else in the pipeline notices), the rows put back to
+`Pin_1..Pin_7`, and a row renumbered (both this check and the net membership
+check fire).
+
+**Where the symbol lives.** `symbols/xiao-ac.kicad_sym`, written by
+`gen_sch.py` from `XIAO_ROWS` and read back through `kicadlib` exactly like a
+stock library — so the file and the copy the schematic caches in `lib_symbols`
+are the one definition. `sym-lib-table` points at it through `${KIPRJMOD}`,
+`tools/ci.sh` hashes it together with the schematic (a stale copy fails the
+gate), and ERC's "library symbol issues" check compares cache against library
+as a second line of defence.
+
+**Why not Seeed's own symbol?** They publish one for the C3 in
+`OPL_Kicad_Library`, and it is the *SMD* variant: 22 pins — the 14 side pins
+plus 8 castellated pads (`EN`, `VBAT`, `MTDI/MTDO/MTMS/MTCK`) — numbered 1..14
+continuously across the two columns, ascending from the far end on the second
+one. This board carries the module's *DIP* socket: 14 holes, two `1x07`
+footprints each numbered 1..7 with pin 1 at the USB-C end. Their symbol would
+put eight pins in the netlist with no hole to go into and renumber both rows;
+and their DIP symbols (RP2350, nRF54LM20A) number the columns the same 1..14
+way, so there is no per-row-numbered 14-pin symbol to borrow. The **names** are
+theirs; the symbol is this project's.
+
+The mapping, for anyone who has to convert between the two numberings. The
+module's own numbers are Seeed's: the D0..D6 column is 1..7 from the USB-C end,
+the other column is 14..8 from that end — which is what both their DIP and SMD
+footprints for the C3 do, checked pad by pad against each other:
+
+| socket | module pin | name |
+| --- | --- | --- |
+| J1.1 | 1 | D0 |
+| J1.2 | 2 | D1 (GPIO3) — `GATE_DRV`, the opto's trigger |
+| J1.3 .. J1.7 | 3..7 | D2 .. D6 (unused on this board) |
+| J2.1 | 14 | VBUS (the 5 V feed) |
+| J2.2 | 13 | GND |
+| J2.3 | 12 | 3V3_OUT (unused) |
+| J2.4 | 11 | D10 |
+| J2.5 | 10 | D9/BOOT |
+| J2.6 | 9 | D8 |
+| J2.7 | 8 | D7 |
+
+The symbol is drawn to the module's geometry where that is meaningful: 2.54 mm
+pin pitch (Seeed's symbol spreads the same 7 pins over 3.81 mm to buy label
+room) and a body as long as the module — 20.955 mm, i.e. 2.921 mm past pin 1
+and 2.794 mm past pin 7, the overhangs `gen_pcb.XIAO` measures the courtyard
+with — with the pin-1 end marked `USB-C end` at the top of both. It is 10.16 mm
+*across*, which is not the module's 17.8 mm: the symbol is one row of holes,
+not the module, and the description property says so.
+
+**The board did not change.** Regenerated and compared item by item against the
+committed board: 18 footprints, 136 copper items, 5 drawings, one group —
+identical apart from J1/J2's value field, which now names the module
+(`XIAO-ESP32C3 left D0..D6`); `tools/check_regen.py` says the same thing from
+the other direction. 11/11 nets routed, ERC 0 violations, DRC 0 errors /
+0 warnings.
 
 ## Mounting holes
 
@@ -198,6 +276,7 @@ came from:
 | artifact | reproducible? | how it is checked |
 | --- | --- | --- |
 | `xiao-ac-ssr.kicad_sch` | **byte-identical** | `ci.sh` regenerates and compares hashes |
+| `symbols/xiao-ac.kicad_sym` | **byte-identical** | hashed with the schematic by `ci.sh` |
 | `xiao-ac-ssr.kicad_dru` | **byte-identical** | measured stable; regenerated by `gen_pcb.py`, not gated |
 | `xiao-ac-ssr.kicad_pcb` | **geometry only** | `tools/check_regen.py` |
 

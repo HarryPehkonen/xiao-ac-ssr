@@ -143,10 +143,11 @@ MOUNTING = [
 #        row_sep to its right
 #   pin 1 of BOTH rows is at the top (y = pin1_y), i.e. at the USB-C end.
 #
-# That is the way round the schematic already reads: J1.2 = D1 (GPIO3, the SSR
-# trigger) is the second pin down from the USB-C end, and J2.1/J2.2 = 5V/GND
-# are the first two of the right column.  Rotate either row by 180 deg and the
-# board fires the wrong pin -- silently, because the nets are still correct.
+# That is the way round the schematic reads -- in the symbol itself, now, not
+# in a comment: J1.2 is named D1 (GPIO3, the SSR trigger), the second pin down
+# from the USB-C end, and J2.1/J2.2 are named VBUS/GND, the first two of the
+# right column.  Rotate either row by 180 deg and the board fires the wrong pin
+# -- silently, because the nets are still correct.
 #
 # The block sits where the two loose sockets used to (x 130 on a 150 mm board);
 # what changed is that it is now 19 mm wide instead of 7.5, and the module's

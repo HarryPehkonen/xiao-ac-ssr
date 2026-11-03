@@ -141,196 +141,6 @@
 						(font
 							(size 1.27 1.27))))))
 		(embedded_fonts no))
-(symbol "Connector_Generic:Conn_01x07"
-		(pin_names
-			(offset 1.016)
-			(hide yes))
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(property "Reference" "J"
-			(at 0 10.16 0)
-			(effects
-				(font
-					(size 1.27 1.27))))
-		(property "Value" "Conn_01x07"
-			(at 0 -10.16 0)
-			(effects
-				(font
-					(size 1.27 1.27))))
-		(property "Footprint" ""
-			(at 0 0 0)
-			(effects
-				(font
-					(size 1.27 1.27))
-				(hide yes)))
-		(property "Datasheet" "~"
-			(at 0 0 0)
-			(effects
-				(font
-					(size 1.27 1.27))
-				(hide yes)))
-		(property "Description" "Generic connector, single row, 01x07, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 0 0 0)
-			(effects
-				(font
-					(size 1.27 1.27))
-				(hide yes)))
-		(property "ki_keywords" "connector"
-			(at 0 0 0)
-			(effects
-				(font
-					(size 1.27 1.27))
-				(hide yes)))
-		(property "ki_fp_filters" "Connector*:*_1x??_*"
-			(at 0 0 0)
-			(effects
-				(font
-					(size 1.27 1.27))
-				(hide yes)))
-		(symbol "Conn_01x07_1_1"
-			(rectangle
-				(start -1.27 8.89)
-				(end 1.27 -8.89)
-				(stroke
-					(width 0.254)
-					(type default))
-				(fill
-					(type background)))
-			(rectangle
-				(start -1.27 7.747)
-				(end 0 7.493)
-				(stroke
-					(width 0.1524)
-					(type default))
-				(fill
-					(type none)))
-			(rectangle
-				(start -1.27 5.207)
-				(end 0 4.953)
-				(stroke
-					(width 0.1524)
-					(type default))
-				(fill
-					(type none)))
-			(rectangle
-				(start -1.27 2.667)
-				(end 0 2.413)
-				(stroke
-					(width 0.1524)
-					(type default))
-				(fill
-					(type none)))
-			(rectangle
-				(start -1.27 0.127)
-				(end 0 -0.127)
-				(stroke
-					(width 0.1524)
-					(type default))
-				(fill
-					(type none)))
-			(rectangle
-				(start -1.27 -2.413)
-				(end 0 -2.667)
-				(stroke
-					(width 0.1524)
-					(type default))
-				(fill
-					(type none)))
-			(rectangle
-				(start -1.27 -4.953)
-				(end 0 -5.207)
-				(stroke
-					(width 0.1524)
-					(type default))
-				(fill
-					(type none)))
-			(rectangle
-				(start -1.27 -7.493)
-				(end 0 -7.747)
-				(stroke
-					(width 0.1524)
-					(type default))
-				(fill
-					(type none)))
-			(pin passive line
-				(at -5.08 7.62 0)
-				(length 3.81)
-				(name "Pin_1"
-					(effects
-						(font
-							(size 1.27 1.27))))
-				(number "1"
-					(effects
-						(font
-							(size 1.27 1.27)))))
-			(pin passive line
-				(at -5.08 5.08 0)
-				(length 3.81)
-				(name "Pin_2"
-					(effects
-						(font
-							(size 1.27 1.27))))
-				(number "2"
-					(effects
-						(font
-							(size 1.27 1.27)))))
-			(pin passive line
-				(at -5.08 2.54 0)
-				(length 3.81)
-				(name "Pin_3"
-					(effects
-						(font
-							(size 1.27 1.27))))
-				(number "3"
-					(effects
-						(font
-							(size 1.27 1.27)))))
-			(pin passive line
-				(at -5.08 0 0)
-				(length 3.81)
-				(name "Pin_4"
-					(effects
-						(font
-							(size 1.27 1.27))))
-				(number "4"
-					(effects
-						(font
-							(size 1.27 1.27)))))
-			(pin passive line
-				(at -5.08 -2.54 0)
-				(length 3.81)
-				(name "Pin_5"
-					(effects
-						(font
-							(size 1.27 1.27))))
-				(number "5"
-					(effects
-						(font
-							(size 1.27 1.27)))))
-			(pin passive line
-				(at -5.08 -5.08 0)
-				(length 3.81)
-				(name "Pin_6"
-					(effects
-						(font
-							(size 1.27 1.27))))
-				(number "6"
-					(effects
-						(font
-							(size 1.27 1.27)))))
-			(pin passive line
-				(at -5.08 -7.62 0)
-				(length 3.81)
-				(name "Pin_7"
-					(effects
-						(font
-							(size 1.27 1.27))))
-				(number "7"
-					(effects
-						(font
-							(size 1.27 1.27))))))
-		(embedded_fonts no))
 (symbol "Converter_ACDC:HLK-PM01"
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1662,6 +1472,260 @@
 				(fill
 					(type none))))
 		(embedded_fonts no))
+(symbol "xiao-ac:XIAO_ESP32C3_Left"
+		(pin_names
+			(offset 1.016))
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property "Reference" "J"
+			(at 0 12.7 0)
+			(effects
+				(font
+					(size 1.27 1.27))))
+		(property "Value" "XIAO_ESP32C3_Left"
+			(at 0 -12.7 0)
+			(effects
+				(font
+					(size 1.27 1.27))))
+		(property "Footprint" ""
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27))
+				(hide yes)))
+		(property "Description" "XIAO ESP32C3 socket row, the module's left column reading D0, D1, D2, D3, D4, D5, D6 from the USB-C end (the module's own DIP pins 1..7)."
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27))
+				(hide yes)))
+		(symbol "XIAO_ESP32C3_Left_0_1"
+			(rectangle
+				(start -5.08 10.541)
+				(end 5.08 -10.414)
+				(stroke
+					(width 0.254)
+					(type default))
+				(fill
+					(type background)))
+			(text "USB-C end"
+				(at 0 9.271 0)
+				(effects
+					(font
+						(size 1.016 1.016)))))
+		(symbol "XIAO_ESP32C3_Left_1_1"
+			(pin passive line
+				(at -7.62 7.62 0)
+				(length 2.54)
+				(name "D0"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "1"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at -7.62 5.08 0)
+				(length 2.54)
+				(name "D1"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "2"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at -7.62 2.54 0)
+				(length 2.54)
+				(name "D2"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "3"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at -7.62 0.0 0)
+				(length 2.54)
+				(name "D3"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "4"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at -7.62 -2.54 0)
+				(length 2.54)
+				(name "D4"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "5"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at -7.62 -5.08 0)
+				(length 2.54)
+				(name "D5"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "6"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at -7.62 -7.62 0)
+				(length 2.54)
+				(name "D6"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "7"
+					(effects
+						(font
+							(size 1.27 1.27))))))
+		(embedded_fonts no))
+(symbol "xiao-ac:XIAO_ESP32C3_Right"
+		(pin_names
+			(offset 1.016))
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property "Reference" "J"
+			(at 0 12.7 0)
+			(effects
+				(font
+					(size 1.27 1.27))))
+		(property "Value" "XIAO_ESP32C3_Right"
+			(at 0 -12.7 0)
+			(effects
+				(font
+					(size 1.27 1.27))))
+		(property "Footprint" ""
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27))
+				(hide yes)))
+		(property "Description" "XIAO ESP32C3 socket row, the module's right column reading VBUS, GND, 3V3_OUT, D10, D9/BOOT, D8, D7 from the USB-C end (the module's own DIP pins 14..8)."
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27))
+				(hide yes)))
+		(symbol "XIAO_ESP32C3_Right_0_1"
+			(rectangle
+				(start -5.08 10.541)
+				(end 5.08 -10.414)
+				(stroke
+					(width 0.254)
+					(type default))
+				(fill
+					(type background)))
+			(text "USB-C end"
+				(at 0 9.271 0)
+				(effects
+					(font
+						(size 1.016 1.016)))))
+		(symbol "XIAO_ESP32C3_Right_1_1"
+			(pin passive line
+				(at 7.62 7.62 180)
+				(length 2.54)
+				(name "VBUS"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "1"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at 7.62 5.08 180)
+				(length 2.54)
+				(name "GND"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "2"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at 7.62 2.54 180)
+				(length 2.54)
+				(name "3V3_OUT"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "3"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at 7.62 0.0 180)
+				(length 2.54)
+				(name "D10"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "4"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at 7.62 -2.54 180)
+				(length 2.54)
+				(name "D9/BOOT"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "5"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at 7.62 -5.08 180)
+				(length 2.54)
+				(name "D8"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "6"
+					(effects
+						(font
+							(size 1.27 1.27)))))
+			(pin passive line
+				(at 7.62 -7.62 180)
+				(length 2.54)
+				(name "D7"
+					(effects
+						(font
+							(size 1.27 1.27))))
+				(number "7"
+					(effects
+						(font
+							(size 1.27 1.27))))))
+		(embedded_fonts no))
 	)
 	(symbol
 		(lib_id "Connector:Screw_Terminal_01x02")
@@ -2139,7 +2203,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x07")
+		(lib_id "xiao-ac:XIAO_ESP32C3_Left")
 		(at 219.71 100.33 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2148,15 +2212,15 @@
 		(dnp no)
 		(uuid "456cf377-aa36-5608-90ec-2d931ab2d253")
 		(property "Reference" "J1"
-			(at 219.71 95.25 0)
+			(at 219.71 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "XIAO left D0..D6"
-			(at 219.71 105.41 0)
+		(property "Value" "XIAO-ESP32C3 left D0..D6"
+			(at 219.71 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2221,7 +2285,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x07")
+		(lib_id "xiao-ac:XIAO_ESP32C3_Right")
 		(at 255.27 100.33 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2230,15 +2294,15 @@
 		(dnp no)
 		(uuid "e36b2b13-e479-5595-9c4b-2d4378fe8aac")
 		(property "Reference" "J2"
-			(at 255.27 95.25 0)
+			(at 255.27 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "XIAO right 5V,GND,3V3,D10,D9,D8,D7"
-			(at 255.27 105.41 0)
+		(property "Value" "XIAO-ESP32C3 right 5V..D7"
+			(at 255.27 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2936,7 +3000,7 @@
 	)
 	(wire
 		(pts
-			(xy 214.63 95.25) (xy 212.09 95.25)
+			(xy 212.09 95.25) (xy 209.55 95.25)
 		)
 		(stroke
 			(width 0)
@@ -2946,7 +3010,7 @@
 	)
 	(wire
 		(pts
-			(xy 250.19 92.71) (xy 247.65 92.71)
+			(xy 262.89 92.71) (xy 265.43 92.71)
 		)
 		(stroke
 			(width 0)
@@ -2956,7 +3020,7 @@
 	)
 	(wire
 		(pts
-			(xy 250.19 95.25) (xy 247.65 95.25)
+			(xy 262.89 95.25) (xy 265.43 95.25)
 		)
 		(stroke
 			(width 0)
@@ -3165,17 +3229,17 @@
 		(uuid "4904d44b-f5af-58a4-b7f3-92297e29c810")
 	)
 	(label "+5V_XIAO"
-		(at 247.65 92.71 180)
+		(at 265.43 92.71 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "508d9940-2f1b-5d17-9b7b-05e1d0836dfd")
 	)
 	(label "GATE_DRV"
-		(at 212.09 95.25 180)
+		(at 209.55 95.25 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3235,12 +3299,12 @@
 		(uuid "b367d067-b149-5fff-bfbc-7e3e1f98d8dd")
 	)
 	(label "GND"
-		(at 247.65 95.25 180)
+		(at 265.43 95.25 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "63dcd757-3ac6-5b70-9aa0-2cbfcc7497d7")
 	)
@@ -3455,48 +3519,48 @@
 		(uuid "5dc7b5c1-7964-5d96-a9eb-1b3f2081ec0d")
 	)
 	(no_connect
-		(at 214.63 92.71)
-		(uuid "171e11aa-280b-5303-bb6f-bf47b0bbcbbb")
+		(at 212.09 92.71)
+		(uuid "b83795fa-ec44-56f2-a202-cb281d7aaa64")
 	)
 	(no_connect
-		(at 214.63 97.79)
-		(uuid "0c63aa28-8ad0-5e69-86fe-0a08061fe5dc")
+		(at 212.09 97.79)
+		(uuid "c2d44265-2f51-5648-bb54-6d19fe47a804")
 	)
 	(no_connect
-		(at 214.63 100.33)
-		(uuid "322b017d-4f25-51b0-ace9-60217a2de8c4")
+		(at 212.09 100.33)
+		(uuid "e935dc26-6197-5a4c-9f61-88f6e7049ce6")
 	)
 	(no_connect
-		(at 214.63 102.87)
-		(uuid "d5a9cf80-cf50-5208-afac-936711736a26")
+		(at 212.09 102.87)
+		(uuid "1721c24b-5f3a-599e-90d8-3173ca94cc4e")
 	)
 	(no_connect
-		(at 214.63 105.41)
-		(uuid "641364f6-d88e-56be-94a6-54e4c1458921")
+		(at 212.09 105.41)
+		(uuid "e4051c5b-b3db-5b0a-8ef4-f96254b87aa9")
 	)
 	(no_connect
-		(at 214.63 107.95)
-		(uuid "1e70b652-2b56-5b7b-af32-fe4e61056a6c")
+		(at 212.09 107.95)
+		(uuid "4715b0b4-c090-5b3c-8c2b-56210123b1ad")
 	)
 	(no_connect
-		(at 250.19 97.79)
-		(uuid "8f2b5116-5914-5891-868a-540d92ace898")
+		(at 262.89 97.79)
+		(uuid "09a8bcd8-1b9b-5141-9908-985c763503b0")
 	)
 	(no_connect
-		(at 250.19 100.33)
-		(uuid "ff93d15e-fe28-518c-8171-0d591491ed12")
+		(at 262.89 100.33)
+		(uuid "d1ad715e-7c88-56de-b9dd-1bffd3ccee5b")
 	)
 	(no_connect
-		(at 250.19 102.87)
-		(uuid "8ea77e55-4d74-5d9d-b48e-bd9530351b41")
+		(at 262.89 102.87)
+		(uuid "4cc538d7-1b6a-55db-b5b0-a9d3d1b62391")
 	)
 	(no_connect
-		(at 250.19 105.41)
-		(uuid "cd704c84-8283-5eb5-8468-8314e9591b18")
+		(at 262.89 105.41)
+		(uuid "427186c0-8d99-5d21-961b-4169da4b6c11")
 	)
 	(no_connect
-		(at 250.19 107.95)
-		(uuid "3a7c525a-569b-5d0a-97e1-78a1e4803ec4")
+		(at 262.89 107.95)
+		(uuid "286ad0a7-d974-54cc-ae9a-92028cad4ed6")
 	)
 	(sheet_instances
 		(path "/"

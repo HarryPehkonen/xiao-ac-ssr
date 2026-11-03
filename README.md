@@ -66,11 +66,15 @@ a generated one can (see Gates).
 ```
 
 1. **Generator == committed file.** Regenerating leaves `xiao-ac-ssr.kicad_sch`
-   byte-identical, so the committed schematic is never stale.
+   and `symbols/xiao-ac.kicad_sym` byte-identical, so neither the committed
+   schematic nor the symbol library it draws `J1`/`J2` from is ever stale.
 2. **Netlist == intent.** `tools/check_netlist.py` exports a netlist with
    `kicad-cli` and asserts it against the intended netlist: every net present
    with exactly the intended pins, no unintended net at all (that would be a
-   short), and only the deliberately open pins reported unconnected.
+   short), only the deliberately open pins reported unconnected, and every pin
+   of the two XIAO socket rows carrying the *module's* pin name — `D0..D6` on
+   `J1`, `VBUS, GND, 3V3_OUT, D10, D9/BOOT, D8, D7` on `J2` — so the schematic
+   and its netlist say which pin is which instead of leaving it to a comment.
 3. **ERC clean.** `kicad-cli sch erc` reports 0 violations.
 4. **Board DRC clean.** `tools/check_board.py` — 0 errors, 0 warnings, including
    the 3 mm mains/logic clearance rule in `xiao-ac-ssr.kicad_dru`.
@@ -81,11 +85,13 @@ a generated one can (see Gates).
    The board file is not *byte*-reproducible (pcbnew stamps fresh UUIDs and
    writes items in its own order), so this compares geometry, which is the part
    a person would have had to edit. `docs/PCB-NOTES.md` has the measurement.
-6. **The board gate's own tests.** `tools/tests/test_board_gate.py` breaks each
+6. **The gates' own tests.** `tools/tests/test_board_gate.py` breaks each
    rule that check 4 enforces — a moved or renamed hole, a track or pad inside
    the keepout, a hole tied to a net, a plated or undersized hole, a footprint
    id with no library nickname, a missing hole — and asserts `check_board.py`
-   reports it. A rule that has never been seen to fail is not a gate.
+   reports it. `tools/tests/test_pin_names.py` does the same for check 2's pin
+   names: a renamed pin, the rows back to `Pin_1..Pin_7`, a renumbered row.
+   A rule that has never been seen to fail is not a gate.
 
 Fabrication data:
 
@@ -118,7 +124,7 @@ DESIGN.md.
 | R4 | 360 Ω | triac gate |
 | C1 | 470 µF 16 V | 5 V bulk |
 | C2 | 100 nF | XIAO decoupling |
-| J1, J2 | 2 × 1×07 2.54 mm socket | XIAO |
+| J1, J2 | 2 × 1×07 2.54 mm socket | XIAO: J1 = D0..D6, J2 = 5V..D7 |
 | J3, J4 | 2-pole 5.08 mm screw terminal | cord in / load out |
 
 Where to buy each one, and why: BOM.md.
@@ -153,12 +159,13 @@ xiao-ac-ssr.kicad_sch      generated schematic (the reviewable design)
 xiao-ac-ssr.kicad_pcb      generated board -- never hand-edit
 xiao-ac-ssr.kicad_dru      the 3 mm mains/logic barrier and the 1.5 mm mains width
 xiao-ac-ssr.kicad_pro      project + netclass settings
+symbols/xiao-ac.kicad_sym  the socket rows' symbols, pins named D0..D6 / VBUS..D7
 sym-lib-table fp-lib-table so the libraries resolve without global config
 tools/kicadlib.py          s-expression reader, symbol flattening (extends)
 tools/gen_sch.py           the circuit + schematic generator
 tools/gen_pcb.py           placement + board generator
 tools/route.py             the maze router
-tools/check_netlist.py     gate: exported netlist == intended netlist
+tools/check_netlist.py     gate: exported netlist == intended netlist (and pin names)
 tools/check_board.py       gate: kicad-cli pcb drc, exit 0 = no violations
 tools/check_regen.py       gate: committed board == generated board (geometry)
 tools/ci.sh                the gates
