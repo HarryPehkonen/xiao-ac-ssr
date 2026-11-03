@@ -163,8 +163,11 @@ with the LED's forward drop taken at its datasheet maximum rather than typical.
 - `kicad-cli sch erc --severity-all --exit-code-violations` — 0 violations.
 - `tools/check_board.py` — `kicad-cli pcb drc`: **0 errors, 0 warnings**, with
   the 3 mm mains/logic barrier and the 1.5 mm mains width enforced as `kicad_dru`
-  rules rather than as good intentions.
-- `tools/check_regen.py` — the committed board is the generated board: 14/14
+  rules rather than as good intentions. It then checks the two rules DRC has no
+  rule for: every footprint id names its library, and the four M3 mounting holes
+  are 5 mm inset with a 3.2 mm non-plated drill, no net, and no copper within
+  3 mm of the centre.
+- `tools/check_regen.py` — the committed board is the generated board: 18/18
   footprints and 143/143 copper items identical after a regeneration in a
   throwaway copy of `tools/`. The board file itself is not byte-reproducible
   (pcbnew UUIDs, write order), so this compares geometry — the part a person
@@ -198,10 +201,13 @@ with the LED's forward drop taken at its datasheet maximum rather than typical.
 
 ## Open items / known weak points
 
-- **No mounting holes yet.** Four M3 clearance holes in the corners need a
-  placement + reroute pass; the corner keepouts change the corridors. Plastic
-  (nylon) standoffs and a plastic box only — this is a two-wire appliance with
-  no earth conductor, so there is nothing for earthed metal to bond to.
+- **The corner keepouts have never bound here.** They are on the board for the
+  next placement change rather than for this one: on this board the corners were
+  already clear and the routing is the pre-hole routing translated 3 mm, so
+  nothing about the current copper depends on the keepout. The dimmer is where
+  the inflation was measured against a real violation. Plastic (nylon) standoffs
+  and a plastic box only — this is a two-wire appliance with no earth conductor,
+  so there is nothing for earthed metal to bond to.
 - **The 2.067 mm copper cap** is a router-model limit, not a physical one; see
   `docs/ninny-brief.md` for the necked-pad-entry slice that would lift it.
 - **The bottom-layer pour is absent** (there is no pour at all): the barrier is

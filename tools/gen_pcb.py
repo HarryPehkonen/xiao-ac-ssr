@@ -42,35 +42,65 @@ def mm(v):
 # would cross x1.  Rows run downwards until the part list is exhausted, so the
 # board height is sized around the packed result (see BOARD_H) instead of the
 # packing being fenced in by a height chosen first.
+#
+# Packing starts at y = 9 rather than y = 6: the four mounting holes sit 5 mm in
+# from the top corners and their courtyards reach 3.45 mm back (see MOUNTING
+# below), so the first row has to clear them.  Placement never collides with a
+# hole, and DRC says so.
 GROUPS = [
     # mains: cord in -> fuse -> protection -> cord out, with the triac beside
     # the outlet so its load pad (Q1.2) is a short hop from J4.  The dimmer's
     # board failed to route LOAD_L when the triac sat at the far end of the
     # mains strip; here the ordering puts them together.
-    ((4, 6, 50), [("J3", 0), ("F1", 0), ("MOV1", 0), ("J4", 0), ("Q1", 0)]),
+    ((4, 9, 50), [("J3", 0), ("F1", 0), ("MOV1", 0), ("J4", 0), ("Q1", 0)]),
     # the triac's gate resistor, in its own strip against the barrier: it is
     # mains-referenced (gate-side of the opto) so it owes logic 3 mm
-    ((52, 6, 58), [("R4", 90)]),
+    ((52, 9, 58), [("R4", 90)]),
     # parts that straddle the barrier, U2 first so its logic pins face the
     # logic-side cluster and its mains pins face the resistor strip
-    ((62, 6, 96), [("U2", 180), ("PS1", 0)]),
+    ((62, 9, 96), [("U2", 180), ("PS1", 0)]),
     # logic-side resistors and the 5 V rail, right of the barrier
-    ((100, 6, 126), [("R3", 90), ("D5", 0), ("C1", 0), ("C2", 0)]),
-    ((130, 6, 147), [("J1", 0), ("J2", 0)]),
+    ((100, 9, 126), [("R3", 90), ("D5", 0), ("C1", 0), ("C2", 0)]),
+    ((130, 9, 147), [("J1", 0), ("J2", 0)]),
 ]
 MARGIN = 2.5          # mm between packed parts
 # The outline is sized to the packed parts, not chosen up front.  The 14 parts
-# span 33.8 mm (first row top at y = 6, deepest part at y = 39.8).  45 mm keeps
-# that 6 mm at the top and leaves 5.2 mm below the last row -- 15% spare on that
-# side, the same rule the dimmer's 57 mm came from (Harri's tolerance is
-# 10-20%, and this board is the sibling of that one).  150 x 45 mm = 67.5 cm2,
-# down from 150 x 95 mm = 142.5 cm2, which the board carried because it was
-# built before the calibration existed.
+# span 33.8 mm (first row top at y = 9, deepest part at y = 42.8).  45 mm keeps
+# that 9 mm at the top -- the mounting holes' courtyards need it -- and leaves
+# 2.2 mm below the last row.  150 x 45 mm = 67.5 cm2, down from
+# 150 x 95 mm = 142.5 cm2, which the board carried because it was built before
+# the calibration existed.
 #
-# The measured floor for this part list is 40 mm (11/11 routed, DRC clean);
-# 39 mm starts warning.  45 stays clear of it rather than spending a reroute
-# defending 5 mm.
+# The mounting holes did *not* cost the board height.  Both corner holes live at
+# y = 5 and y = 40, and the only parts deep enough to reach the bottom pair's
+# courtyards (y 36.55 .. 43.45) are Q1/J4 in the mains strip and PS1 across the
+# barrier -- all of them between x = 19 and x = 99.4, i.e. clear of both
+# corners.  Moving the packing down 3 mm to clear the top pair changed nothing
+# else: all 143 copper items on the new board are the pre-change routing
+# translated +3.0 mm, item for item (measured), and the corner keepouts never
+# bound.  Outline still 150 x 45 mm, still 11/11 routed, DRC still 0/0.
+#
+# The measured floor for this part list is 40 mm (11/11 routed, DRC clean); at
+# 39 mm the router starts warning.  45 stays clear of it rather than spending a
+# reroute defending 5 mm.
 BOARD_W, BOARD_H = 150.0, 45.0
+
+# ---------------------------------------------------------------- mounting --
+# Four M3 clearance holes, one per corner, 5 mm in from both edges.  The
+# footprint is a plain non-plated 3.2 mm hole: no pad, no annular ring, no net,
+# so nothing is bonded and nothing sits under the screw head.  Nylon standoffs
+# only -- this is a two-wire appliance with no earth conductor, so a metal
+# standoff has nothing safe to be bonded to (see BOM.md).
+MOUNT_FP = "MountingHole:MountingHole_3.2mm_M3"
+MOUNT_INSET = 5.0             # mm from each board edge to the hole centre
+MOUNT_DRILL = 3.2             # mm finished hole, M3 clearance
+MOUNT_KEEPOUT = 6.0           # mm diameter of the copper-free disc around it
+MOUNTING = [
+    ("H1", MOUNT_INSET, MOUNT_INSET),
+    ("H2", BOARD_W - MOUNT_INSET, MOUNT_INSET),
+    ("H3", MOUNT_INSET, BOARD_H - MOUNT_INSET),
+    ("H4", BOARD_W - MOUNT_INSET, BOARD_H - MOUNT_INSET),
+]
 
 
 def place_all(fps):
@@ -125,6 +155,24 @@ def schematic_nets():
     return nets
 
 
+def load_footprint(spec):
+    """Load "Library:Name" from the system KiCad libraries.
+
+    FootprintLoad() hands back the bare footprint *name*, so the board used to
+    save as (footprint "R_Axial_..." with no library nickname.  The geometry is
+    embedded either way and fab is unaffected, but with no nickname "update
+    footprint from library" can never work -- and that is the whole workflow for
+    swapping a part on this board (a mounting hole, an IRM-03-5, ...).
+    """
+    lib, name = spec.split(":")
+    src = os.path.join("/usr/share/kicad/footprints", lib + ".pretty")
+    fp = pcbnew.FootprintLoad(src, name)
+    if fp is None:
+        raise SystemExit(f"cannot load footprint {spec}")
+    fp.SetFPID(pcbnew.LIB_ID(lib, name))
+    return fp
+
+
 def build():
     board = pcbnew.BOARD()
     board.SetFileName(BOARD)
@@ -141,11 +189,7 @@ def build():
     for part in gen_sch.PARTS:
         if not part["fp"]:
             continue
-        lib, name = part["fp"].split(":")
-        src = os.path.join("/usr/share/kicad/footprints", lib + ".pretty")
-        fp = pcbnew.FootprintLoad(src, name)
-        if fp is None:
-            raise SystemExit(f"cannot load footprint {part['fp']}")
+        fp = load_footprint(part["fp"])
         fp.SetReference(part["ref"])
         fp.SetValue(part["val"])
         fps[part["ref"]] = fp
@@ -170,6 +214,18 @@ def build():
             for p in fp.Pads():
                 if p.GetNumber() == pad:
                     p.SetNet(netitems[net])
+
+    # --- mounting holes ----------------------------------------------------
+    # Placed before routing, and on the board rather than kept in a table here,
+    # so the router finds them where they really are (route.py keeps a copper
+    # keepout around any MountingHole footprint it sees).
+    for ref, x, y in MOUNTING:
+        fp = load_footprint(MOUNT_FP)
+        fp.SetReference(ref)
+        fp.SetValue(MOUNT_FP.split(":")[1])
+        fp.SetPosition(pcbnew.VECTOR2I(MM(x), MM(y)))
+        board.Add(fp)
+        by_ref[ref] = fp
 
     # --- board outline -----------------------------------------------------
     for (x0, y0), (x1, y1) in zip(EDGE, EDGE[1:]):
@@ -227,4 +283,5 @@ if __name__ == "__main__":
         print(f"wrote {BOARD}")
         fp_count = len(list(pcbnew.LoadBoard(BOARD).GetFootprints()))
         print(f"  {fp_count} footprints, {len(schematic_nets())} nets, "
-              f"board outline {BOARD_W:g} x {BOARD_H:g} mm")
+              f"board outline {BOARD_W:g} x {BOARD_H:g} mm, "
+              f"{len(MOUNTING)} mounting holes")

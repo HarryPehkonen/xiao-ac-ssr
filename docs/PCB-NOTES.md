@@ -7,9 +7,9 @@ schematic about connectivity.
 
 ## What works
 
-- 14 footprints placed by the zone packer (mains / barrier / logic) on a
-  150 × 45 mm outline. No courtyard overlaps. The outline is sized to the
-  packed parts — see "Board size" below.
+- 18 footprints on a 150 × 45 mm outline: the 14 parts placed by the zone packer
+  (mains / barrier / logic) plus the **4 M3 mounting holes**. No courtyard
+  overlaps. The outline is sized to the packed parts — see "Board size" below.
 - **11 of 11 nets routed** from `kicad-cli sch export netlist`: 137 track
   segments, 6 vias, 794 mm of copper (the longest net is GND at 158 mm).
   106 segments on F.Cu, 31 on B.Cu; widths used are 1.5 mm (mains), 0.6 mm
@@ -19,9 +19,82 @@ schematic about connectivity.
   **1.5 mm minimum mains track width**. Both are DRC rules, not conventions —
   eroding either one fails the gate.
 - DRC: **0 errors, 0 warnings.**
+- Every footprint id carries its **library nickname** (`Resistor_THT:R_Axial_…`,
+  not `R_Axial_…`), so "update footprint from library" works — the workflow a
+  part swap needs. `FootprintLoad()` was dropping it on placement. See
+  "The nickname defect this board inherited".
 - **The committed board is the generated board**: `tools/check_regen.py`, the
   fifth gate, regenerates in a throwaway copy of `tools/` and compares every
-  footprint and copper item against `xiao-ac-ssr.kicad_pcb` (14 and 143 today).
+  footprint and copper item against `xiao-ac-ssr.kicad_pcb` (18 and 143 today).
+
+## Mounting holes
+
+Four M3 clearance holes, one per corner, 5 mm inset from both edges:
+`MountingHole:MountingHole_3.2mm_M3`, a non-plated 3.2 mm hole with no pad and
+no net. Each owns a **6 mm-diameter copper-free disc** — no track, via or pad
+edge within 3 mm of the hole centre — because an M3 screw head sits over it.
+They carry `exclude_from_bom` / `exclude_from_pos_files`. The pass is the
+dimmer's `a32a414` applied to this board, one generation later.
+
+Measured on the committed board (the gate prints this):
+
+| hole | position | nearest board edge | closest copper to the centre |
+| --- | --- | --- | --- |
+| H1 | (5, 5) | 5.00 mm | 6.051 mm (`L_IN`, 1.5 mm track) |
+| H2 | (145, 5) | 5.00 mm | 7.969 mm (`J2.1`) |
+| H3 | (5, 40) | 5.00 mm | 10.067 mm (`N_AC`) |
+| H4 | (145, 40) | 5.00 mm | 14.778 mm (`J2.7`) |
+
+What fell out of adding them:
+
+1. **The corner courtyards forced the packing in.** Each hole's courtyard
+   reaches 3.45 mm back from its centre, so the packing strips start 9 mm from
+   the top edge instead of hugging the outline. **Nothing else about the routing
+   changed**: all 143 copper items on the new board are the old routing
+   translated **+3.0 mm** in y, item for item (measured by comparing the two
+   boards' copper sets). Still 11/11, still 0 errors and 0 warnings.
+2. **The outline did not grow.** The holes sit at y = 5 and y = 40, and the only
+   parts deep enough to reach the bottom pair's courtyards (y 36.55 … 43.45) are
+   Q1/J4 in the mains strip and PS1 across the barrier — all between x = 19 and
+   x = 99.4, clear of both corners. 150 × 45 mm stands. The corner-copper
+   question in the card that requested this pass — "the SSR's copper spans
+   nearly the full outline and I have not measured the corner clearance" —
+   measured **empty**: the nearest copper to any hole is 6.05 mm from its centre,
+   twice the 3 mm spec radius.
+3. **The keepout is inflated by the copper that has to pass it.** Blocking cell
+   *centres* at the 3 mm spec radius is not enough: a 1.5 mm mains track laid on
+   the last free cell still puts its edge 0.75 mm inside the disc.
+   `MOUNT_BLOCK_R` is the spec radius plus half the widest track plus the
+   half-cell diagonal. On the dimmer this was measured as a real violation
+   (LOAD_L's edge 2.86 mm from H1); on **this** board the corners were already
+   clear, so the keepout never bound — it is carried because the placement is
+   free to move again, not because it was needed here. A pure-function test pins
+   the inflation so it cannot be quietly dropped.
+
+## The nickname defect this board inherited
+
+`xiao-ac-ssr` was generated from the dimmer's tools *before* the dimmer's
+`a32a414`, so it inherited that board's footprint-library defect: **every one of
+its 14 footprint ids had no `Lib:` prefix** (`TO-220-3_Vertical`, not
+`Package_TO_SOT_THRU:TO-220-3_Vertical`). The geometry is embedded in the board
+and fab is unaffected, but "update footprint from library" can never work
+without the link — and that is the whole workflow for swapping a part.
+
+This is what the new gate found on the *unmodified* board, before anything was
+fixed — 19 failures, all real:
+
+```
+0 error(s), 0 warning(s)
+19 board problem(s) DRC cannot see:
+  FAIL  C1: footprint id 'CP_Radial_D8.0mm_P3.50mm' carries no library nickname, so 'update footprint from library' cannot work
+  ...
+  FAIL  0 mounting hole footprint(s) on the board, 4 in gen_pcb.MOUNTING
+```
+
+So the answer to the card's question — "check whether the library-nickname
+defect was inherited too" — is **yes**, measured rather than assumed, and DRC
+had said 0 errors and 0 warnings about it both times.
+
 
 ## Board size
 
@@ -29,23 +102,28 @@ schematic about connectivity.
 
 The board was built as the dimmer's sibling, so it inherited the dimmer's
 outline — and with it the dimmer's dead band. Its 14 parts span **33.8 mm**
-vertically (y 6 → 39.8 mm), so 95 mm was carrying **55 mm of empty board** below
-the last row (plus the router's unused corridors above and below it). Nothing
-had flagged it, because the outline is an input to the pipeline, not a result of
-it.
+vertically (then y 6 → 39.8 mm; y 9 → 42.8 mm now that the mounting holes pushed
+the packing down 3 mm), so 95 mm was carrying **55 mm of empty board** below the
+last row (plus the router's unused corridors above and below it). Nothing had
+flagged it, because the outline is an input to the pipeline, not a result of it.
 
 The height is now sized around the packed parts (`BOARD_H` in
 `tools/gen_pcb.py` carries the reasoning), by the same rule the dimmer's 57 mm
 came from:
 
-- **Height 45 mm.** 6 mm above the first row, 33.8 mm of parts, 5.2 mm below the
-  last row — **15% spare on that side**, inside the 10-20% tolerance.
+- **Height 45 mm.** 9 mm above the first row, 33.8 mm of parts, 2.2 mm below the
+  last row. The **9 mm at the top** is what the mounting holes cost: their
+  courtyards reach 3.45 mm back from y = 5, so the packing had to move down from
+  y = 6 (see "Mounting holes"). It cost no copper — the routing is the old
+  routing translated 3 mm.
 - **Width stays 150 mm.** The parts span 135.7 mm, already ~10% over.
 - **The floor is 40 mm.** Shrinking removes the router's spare corridors, so a
   smaller board is a *new* routing claim: 40, 41, 42, 43, 44 and 45 mm were each
   regenerated end-to-end and each reported **11/11 nets** with 0 DRC errors and
   0 warnings. 39 mm is where it starts warning. 45 is used rather than 40 —
-  five spare millimetres are not worth chasing the minimum.
+  five spare millimetres are not worth chasing the minimum. (The 40 mm floor was
+  measured *before* the mounting holes; 45 mm is re-measured *with* them and is
+  unchanged, so it still stands as the shipped height.)
 - **Nothing else changed:** the placement, the 3 mm barrier rule, the 137 track
   segments and 6 vias are the same as at 95 mm, and `check_regen.py` still finds
   the committed board identical to the generated one.
@@ -61,7 +139,7 @@ came from:
 The board file is not byte-reproducible and cannot be made so cheaply: pcbnew
 stamps a fresh UUID on every footprint, pad, track and text it creates, and
 KiCad writes those items back in its own order. What *is* reproducible is the
-board itself — measured: **14/14 footprints and 143/143 tracks+vias identical**
+board itself — measured: **18/18 footprints and 143/143 tracks+vias identical**
 between two consecutive runs *and* identical to the committed board. So the gate
 compares the geometry, which is the part a person would have had to edit to fake
 something.
@@ -71,8 +149,18 @@ The gate has teeth: nudging `MOV1` 0.5 mm by hand in the committed
 
 ```
 FAIL: footprints differ -- the committed board is not what the generator produces
-  only in the committed board: ('MOV1', 'S14K150', 7.025, 21.25, 0.0, 0)
-  only in the generated board: ('MOV1', 'S14K150', 6.525, 21.25, 0.0, 0)
+  only in the committed board: ('MOV1', 'S14K150', 7.025, 24.25, 0.0, 0)
+  only in the generated board: ('MOV1', 'S14K150', 6.525, 24.25, 0.0, 0)
+```
+
+…and so does moving a **mounting hole** 0.5 mm, which is the other half of the
+same question (a hand-moved hole is caught here *and* by the geometry gate in
+`check_board.py`, by two independent measurements):
+
+```
+FAIL: footprints differ -- the committed board is not what the generator produces
+  only in the committed board: ('H1', 'MountingHole_3.2mm_M3', 5.5, 5.0, 0.0, 0)
+  only in the generated board: ('H1', 'MountingHole_3.2mm_M3', 5.0, 5.0, 0.0, 0)
 ```
 
 One more piece of churn, for the record: `gen_sch.py` writes a minimal
@@ -129,9 +217,11 @@ triac-bound: the BTA16 is a 16 A part. See DESIGN.md decision 9 and
 
 ## What does not work yet
 
-- **No mounting holes.** Four M3 holes in the corners with 6 mm copper keepouts
-  are a small change to the placement table, but they move the corner
-  corridors and the router has to be re-run and re-gated. See BOM.md.
+- **The corner keepouts have never bound here.** They are carried for the next
+  placement, not for this one: on this board the corners were already clear
+  (nearest copper 6.05 mm from a hole centre) and the routing is the pre-hole
+  routing translated 3 mm. The *dimmer* is where the inflation was measured
+  against a real violation. See "Mounting holes".
 - **No copper pour on either layer.** Deliberate: the 3 mm barrier is easier to
   guarantee without one and this board has no thermal need for it.
 - **The approach into Q1.2 is a one-cell corridor** in the router's grid, i.e.

@@ -76,10 +76,16 @@ a generated one can (see Gates).
    the 3 mm mains/logic clearance rule in `xiao-ac-ssr.kicad_dru`.
 5. **Board == generator.** `tools/check_regen.py` regenerates the board in a
    throwaway copy of the tools and compares every footprint and every copper
-   item against the committed board — 14 footprints and 143 tracks+vias today.
+   item against the committed board — 18 footprints (14 parts + 4 mounting
+   holes) and 143 tracks+vias today.
    The board file is not *byte*-reproducible (pcbnew stamps fresh UUIDs and
    writes items in its own order), so this compares geometry, which is the part
    a person would have had to edit. `docs/PCB-NOTES.md` has the measurement.
+6. **The board gate's own tests.** `tools/tests/test_board_gate.py` breaks each
+   rule that check 4 enforces — a moved or renamed hole, a track or pad inside
+   the keepout, a hole tied to a net, a plated or undersized hole, a footprint
+   id with no library nickname, a missing hole — and asserts `check_board.py`
+   reports it. A rule that has never been seen to fail is not a gate.
 
 Fabrication data:
 

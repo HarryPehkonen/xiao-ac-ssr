@@ -16,9 +16,9 @@ The board file is *not* byte-reproducible, so this cannot be a hash compare:
   - KiCad writes those items back in its own order.
 
 What *is* reproducible is the board itself: placement and every copper item.
-Measured across runs and against the committed board: 14/14 footprints and
-143/143 tracks+vias identical.  So this gate regenerates the board in a
-throwaway copy of the tools and compares that digest.
+Measured across runs and against the committed board: 18/18 footprints (the 14
+parts and the 4 mounting holes) and 143/143 tracks+vias identical.  So this gate
+regenerates the board in a throwaway copy of the tools and compares that digest.
 
 Scope, stated honestly: this catches the board disagreeing with the generator.
 It says nothing about whether the design is right, and nothing about safety.

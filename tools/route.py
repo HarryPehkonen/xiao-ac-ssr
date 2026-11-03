@@ -69,6 +69,22 @@ VIA_COST = 12                   # in cells, so vias are used deliberately
 QUANT = GRID * 0.71             # half a cell diagonal: blocking is per cell
                                 # centre, so every radius needs this much
                                 # slack or tracks clip pads between cells
+MOUNT_KEEPOUT_R = 3.0           # copper-free radius around a mounting hole.
+                                # gen_pcb.py specs a 6 mm copper-free disc
+                                # (MOUNT_KEEPOUT) because an M3 screw head sits
+                                # over the hole and must not find copper;
+                                # check_board.py measures the finished board
+                                # against that spec, so the two cannot drift.
+# The grid blocks cell *centres*, so a keepout has to be inflated by the widest
+# copper that could pass on it (mains half-width; a mains via is only 0.5 mm
+# radius) plus the half-cell diagonal, or a 1.5 mm mains track laid on the last
+# free cell still puts its edge 0.75 mm inside the disc.  Measured on the dimmer,
+# which this pass comes from: LOAD_L's edge came within 2.86 mm of H1 before the
+# inflation.  On *this* board the corners were already clear -- every copper item
+# is the pre-change routing translated 3 mm and L_IN's edge sits 6.05 mm from H1
+# -- so the inflation is carried because the placement is free to move again,
+# not because it was needed here.
+MOUNT_BLOCK_R = MOUNT_KEEPOUT_R + WIDTH_MAINS / 2 + QUANT
 
 
 def _c(v):
@@ -201,6 +217,21 @@ def _in(box, x, y):
     return box[0] <= x <= box[2] and box[1] <= y <= box[3]
 
 
+def _mounting_holes(board):
+    """Centres of this board's mounting holes, in mm.
+
+    Found on the board by footprint id, not from a table here: gen_pcb.py
+    placed the holes, and a second table would be a second source of truth for
+    something that already exists in exactly one place.
+    """
+    out = []
+    for fp in board.GetFootprints():
+        if str(fp.GetFPID().GetLibItemName()).startswith("MountingHole"):
+            p = fp.GetPosition()
+            out.append((pcbnew.ToMM(p.x), pcbnew.ToMM(p.y)))
+    return out
+
+
 def _to_segments(path):
     """Merge collinear grid steps into single track segments.
 
@@ -321,6 +352,17 @@ def route(board, netitems, nets, verbose=True):
             _block_pad(pad, g_sig, None, WIDTH_SIGNAL / 2)
             _block_pad(pad, g_mains, None, WIDTH_SIGNAL / 2)
 
+    # A mounting hole is a keepout, not an obstacle to route around: an M3
+    # screw head sits over it, so no copper may come within MOUNT_KEEPOUT_R.
+    # Blocked on both occupancy grids *and* kept as a veto below, because
+    # _open() clears cells around a net's own pads and would otherwise punch a
+    # pad's escape spoke straight through the disc.
+    holes = _mounting_holes(board)
+    keepout = Grid()
+    for hx, hy in holes:
+        for g in (g_sig, g_mains, keepout):
+            g.block_disc(hx, hy, MOUNT_BLOCK_R)
+
     def span(n):
         """How far apart this net's own pads are: the longest pad-to-pad hop.
 
@@ -381,7 +423,8 @@ def route(board, netitems, nets, verbose=True):
                 for p in pads}
         for pad in pads:
             _open(grid, pad, mine, all_pads,
-                  (cop_m2m, cop_s2m) if mains else (cop_m2s, cop_s2s), half)
+                  (cop_m2m, cop_s2m, keepout) if mains
+                  else (cop_m2s, cop_s2s, keepout), half)
 
         ok = True
         segs, vias = [], []
@@ -395,7 +438,8 @@ def route(board, netitems, nets, verbose=True):
             grid.unblock(g[0], g[1], None)
             path = astar(grid, s, g)
             if path is None:
-                vet = (cop_m2m, cop_s2m) if mains else (cop_m2s, cop_s2s)
+                vet = ((cop_m2m, cop_s2m, keepout) if mains
+                       else (cop_m2s, cop_s2s, keepout))
                 why = _diagnose(grid, pad, mine, all_pads, vet, half)
                 failed[net] = (f"no path {_ref(anchor)}.{anchor.GetNumber()}"
                                f" -> {_ref(pad)}.{pad.GetNumber()} [{why}]")

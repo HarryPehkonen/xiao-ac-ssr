@@ -1,10 +1,14 @@
 #!/bin/sh
-# Gate for this repo.  Five checks, all machine-verifiable:
+# Gate for this repo.  Six checks, all machine-verifiable:
 #   1. the committed schematic is exactly what the generator produces
 #   2. the netlist exported from it equals the intended netlist
 #   3. ERC reports no violations
-#   4. the board passes DRC with no violations
+#   4. the board passes DRC with no violations, and honours the rules DRC has
+#      no rule for (every footprint id names its library, the mounting holes
+#      are where the design says with an empty copper keepout)
 #   5. the committed board is the one the generator produces (placement + copper)
+#   6. the rules in 4 have been seen to fail -- each is broken in
+#      tools/tests/test_board_gate.py and check_board.py must report it
 # Run from anywhere:  ./tools/ci.sh
 set -eu
 cd "$(dirname "$0")/.."
@@ -33,6 +37,12 @@ echo "== committed board matches the generator"
 # it fails -- which is the only time a person needs to read it.
 /usr/bin/python3 tools/check_regen.py > /dev/null 2>&1 || {
     /usr/bin/python3 tools/check_regen.py
+    exit 1
+}
+
+echo "== the board gate's own tests (each gate rule, seen to fail)"
+/usr/bin/python3 -m pytest tools/tests -q > /dev/null 2>&1 || {
+    /usr/bin/python3 -m pytest tools/tests -q
     exit 1
 }
 

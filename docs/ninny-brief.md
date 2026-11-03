@@ -12,9 +12,10 @@ Everything is generated headless; there is no GUI on this machine.
 | `tools/check_netlist.py` | gate: exported netlist == intended netlist |
 | `tools/gen_pcb.py` | places footprints (zone packer) and routes the board |
 | `tools/route.py` | the maze router (A* over a 0.5 mm grid, two layers, vias) |
-| `tools/check_board.py` | gate: `kicad-cli pcb drc`, exit 0 = no violations |
+| `tools/check_board.py` | gate: `kicad-cli pcb drc` plus the rules DRC has none for — library nicknames, the mounting holes and their keepout; exit 0 = clean |
 | `tools/check_regen.py` | gate: committed board == generated board (placement + copper) |
-| `tools/ci.sh` | the gate: schematic staleness + netlist + ERC + board DRC + board regen |
+| `tools/tests/test_board_gate.py` | the gate's own teeth: each rule broken, one at a time |
+| `tools/ci.sh` | the gate: schematic staleness + netlist + ERC + board DRC/rules + board regen + gate tests |
 | `xiao-ac-ssr.kicad_pcb` | GENERATED — never hand-edit it |
 | `xiao-ac-ssr.kicad_dru` | custom DRC rules (the mains isolation barrier, the 1.5 mm mains width) |
 

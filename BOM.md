@@ -88,26 +88,35 @@ current <0.2 A.
 
 ## Mechanical — mounting
 
-The board has **no mounting holes yet** — the dimmer has had four since `a32a414`
-and this board, built before that, never picked them up. Adding them
-is a small change to `tools/gen_pcb.py`, not a redesign:
+Four M3 clearance holes are on the board: one per corner, **5 mm inset** from the
+board edge, `MountingHole:MountingHole_3.2mm_M3` — a **non-plated 3.2 mm** hole
+with no pad, so nothing is bonded and nothing sits under the screw head. Each
+owns a **6 mm copper keepout** (no track, via or pad edge within 3 mm of the hole
+centre) and the router blocks that disc, not just the hole.
 
-- 4 × M3 clearance holes (3.2 mm drill) in the corners, **5 mm inset** from the
-  board edge, each with a 6 mm copper keepout so no net comes near the screw.
+This is the dimmer's `a32a414` pass applied to this board, which was generated
+from the dimmer's tools before it and so had no holes at all:
+
 - The mounting pads stay **isolated** — connected to no net, no copper ring
   under the screw head.
 - **Nylon standoffs, not metal.** This is a two-wire appliance with no earth
   conductor, so there is nothing for a metal standoff or a metal enclosure to be
   safely bonded to. Plastic standoffs and a plastic box avoid the question
   entirely.
-- Adding holes means re-running the router: the corner keepouts change the
-  available corridors. Cheap now that the gate is known-good.
+- Both the holes and the keepout are gated: `tools/check_board.py` checks the
+  position, the 3.2 mm non-plated drill, the net and the copper clearance on the
+  saved board, and `tools/tests/test_board_gate.py` breaks each of those rules
+  one at a time to prove the check has teeth.
+- The corner courtyards pushed the packing down 3 mm, and nothing else changed:
+  the routing is the pre-hole routing translated 3 mm, item for item. The board
+  did **not** grow — see `docs/PCB-NOTES.md`.
 
 ## Mechanical — board outline
 
 **150 × 45mm (67.5cm²)**, down from 150 × 95mm (142.5cm²). The 14 parts span
-33.8mm top to bottom (y 6 → 39.8mm), so the old 95mm left a **55mm dead band
-along the bottom edge** — more than half the board. The outline was inherited
+33.8mm top to bottom (y 9 → 42.8mm; y 6 → 39.8mm before the mounting holes
+pushed the packing down), so the old 95mm left a **55mm dead band along the
+bottom edge** — more than half the board. The outline was inherited
 from the dimmer, which had raised its own height to 95mm while the router was
 failing; this board was generated from that state, so it inherited the dead band
 without ever having had the failure. See `BOARD_H` in `tools/gen_pcb.py`, and
