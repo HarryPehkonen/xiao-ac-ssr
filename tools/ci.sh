@@ -5,7 +5,8 @@
 #   3. ERC reports no violations
 #   4. the board passes DRC with no violations, and honours the rules DRC has
 #      no rule for (every footprint id names its library, the mounting holes
-#      are where the design says with an empty copper keepout)
+#      are where the design says with an empty copper keepout, and the two
+#      socket rows are one mating interface that a XIAO actually fits)
 #   5. the committed board is the one the generator produces (placement + copper)
 #   6. the rules in 4 have been seen to fail -- each is broken in
 #      tools/tests/test_board_gate.py and check_board.py must report it

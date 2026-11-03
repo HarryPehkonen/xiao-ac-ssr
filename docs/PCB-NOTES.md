@@ -7,12 +7,14 @@ schematic about connectivity.
 
 ## What works
 
-- 18 footprints on a 150 × 45 mm outline: the 14 parts placed by the zone packer
-  (mains / barrier / logic) plus the **4 M3 mounting holes**. No courtyard
-  overlaps. The outline is sized to the packed parts — see "Board size" below.
-- **11 of 11 nets routed** from `kicad-cli sch export netlist`: 137 track
-  segments, 6 vias, 794 mm of copper (the longest net is GND at 158 mm).
-  106 segments on F.Cu, 31 on B.Cu; widths used are 1.5 mm (mains), 0.6 mm
+- 18 footprints on a 150 × 45 mm outline: **12 parts placed by the zone packer**
+  (mains / barrier / logic), the **XIAO socket block** (J1 + J2, one locked
+  group — see "The XIAO socket" below), and the **4 M3 mounting holes**. No
+  courtyard overlaps. The outline is sized to the packed parts — see "Board
+  size" below.
+- **11 of 11 nets routed** from `kicad-cli sch export netlist`: 131 track
+  segments, 5 vias, 817 mm of copper (the longest net is GND at 170 mm).
+  106 segments on F.Cu, 25 on B.Cu; widths used are 1.5 mm (mains), 0.6 mm
   (5 V/GND) and 0.4 mm (signal).
 - `xiao-ac-ssr.kicad_dru` carries the isolation barrier as a machine-checked
   rule: **3 mm clearance between mains nets and everything else**, and a
@@ -25,7 +27,70 @@ schematic about connectivity.
   "The nickname defect this board inherited".
 - **The committed board is the generated board**: `tools/check_regen.py`, the
   fifth gate, regenerates in a throwaway copy of `tools/` and compares every
-  footprint and copper item against `xiao-ac-ssr.kicad_pcb` (18 and 143 today).
+  footprint and copper item against `xiao-ac-ssr.kicad_pcb` (18 and 136 today).
+
+## The XIAO socket (the defect this board inherited)
+
+`J1`/`J2` were two *independent* generic 1×7 sockets, and the packer chose their
+separation: **6.10 mm** (x = 131.825 and 137.925). Pitch ✓, 7 + 7 = 14 pins ✓,
+netlist right, ERC clean, DRC clean, 11/11 nets routed — and **the module cannot
+physically seat**, because a XIAO needs the two rows **15.24 mm** apart. This
+board was copied from `xiao-ac-dimmer`, so it inherited the defect rather than
+making it; it was measured here (pads at x = 131.825 / 137.925) before anything
+was changed, not assumed from the sibling.
+
+Nothing in the pipeline was wrong. Every footprint was individually valid and
+the nets were correct; **the mating interface only exists in the pair**, and no
+ERC or DRC rule looks at a pair. A generic 1×7 socket has no idea it is half of
+a module socket. Assertion against the mating part's own numbers is the only
+defence, which is why `check_board.py` now measures the pair.
+
+**The number, and where it comes from.** Not from the report: from the mating
+part's own KiCad footprint — `OPL_Kicad_Library`,
+`Seeed Studio XIAO Series Library/XIAO-ESP32-C3-DIP.kicad_mod`
+(github.com/Seeed-Studio/OPL_Kicad_Library). Its two rows put their pads at
+**y = ±7.620 mm → 15.24 mm** apart, 7 pads per row on 2.54 mm, module body
+**17.8 mm** across the rows and 21.0 mm along them — the wiki's 21 × 17.5 mm
+drawing agrees to the tenth of a millimetre. `XIAO["row_sep"]` carries the
+number with the source in a comment.
+
+What the fix changes in `tools/gen_pcb.py`:
+
+- **`XIAO`** is the module's geometry in one table (`row1_x`, `pin1_y`, `pitch`,
+  `per_row`, `row_sep`, `width`, the module's overhangs at each end, the
+  socket's own drill and Seeed's pin drill).
+- **`place_xiao()`** places *both* rows from that one entry and locks them. It
+  moves each row's **pad 1** onto the wanted point rather than setting the
+  footprint's position, which would silently assume the footprint's origin is
+  its pad 1 — true for KiCad's `PinSocket_1x07` today, and exactly the kind of
+  assumption this change exists to stop making.
+- The two rows are **one `XIAO_SOCKET` PCB_GROUP**: one part, 14 holes, one
+  placement. They are out of the packing strips, so the packer cannot choose
+  their separation again.
+- **`xiao_envelope()`** is the 17.8 × 20.955 mm area the module body occupies
+  over the sockets, drawn on **F.CrtYd**. It is a keepout both ways: the gate
+  fails if any other footprint reaches into it, and the packer refuses to place
+  a part there.
+
+**Which physical side is which.** Both rows' pad 1 is at the **USB-C end**
+(y = 13 mm, towards the top edge), because the module's pin 1 is at its USB-C
+end. From the top with the USB-C connector up: **J1 (x = 130 mm) is the module's
+left column, D0…D6** top to bottom, nearest the mains section, and **J2
+(x = 145.24 mm) is its right column — 5V, GND, 3V3, D10, D9, D8, D7**. The pins
+this board uses are **J1 pad 2 = D1/GPIO3 = `GATE_DRV`** (the opto's trigger) and
+**J2 pad 1 / pad 2 = `+5V_XIAO` / `GND`** — i.e. the first two of the right-hand
+column. A row reversed 180° puts the trigger on the wrong pin and swaps 5 V and
+GND, with every net still "correct"; both are now gate failures.
+
+**Board area: it fitted without growing.** The block sits where the two loose
+sockets were (x 128.72 → 146.52, 3.48 mm from the right edge) — the same
+coordinates the dimmer ended up with, because the module's envelope is what
+decides the block's size, not the packing. The board stayed **150 × 45 mm**; only
+`J2` moved, 9.14 mm to the right, which is a **new routing**, not the old one
+carried over: 131 track segments and 5 vias instead of 137 and 6, 817 mm of
+copper instead of 794. 11/11 nets and 0 errors / 0 warnings are re-measured
+claims, and `tools/check_regen.py` re-derives the board from the generator to
+prove the committed file is that result.
 
 ## Mounting holes
 

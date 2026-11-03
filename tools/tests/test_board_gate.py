@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""The gate's teeth: nine ways to break this board's rules, each of which
-`check_board.geometry()` must report.
+"""The gate's teeth: twenty-five ways to break this board's rules, each of which
+`check_board.py` must report.
 
-`check_board.py` gates two things DRC has no rule for -- every footprint id
-names its library, and the four M3 mounting holes are where and what the design
-says with an empty copper keepout.  A gate that has never been seen to fail is
-not a gate, so every rule below is broken on a copy of the **committed** board
-and the failure is asserted by what it says, not by the exit code alone.
+`check_board.py` gates what DRC has no rule for -- every footprint id names its
+library, the four M3 mounting holes are where and what the design says with an
+empty copper keepout, and the XIAO socket pair is a mating interface a module
+actually fits.  A gate that has never been seen to fail is not a gate, so every
+rule below is broken on a copy of the **committed** board and the failure is
+asserted by what it says, not by the exit code alone.
 
 The board is loaded from disk and mutated in memory: nothing is written, and no
 board is regenerated.  The honest board must report nothing, so a test cannot
 pass just because the gate complains about everything.
+
+Mutating rather than deleting is deliberate.  In this KiCad binding,
+`FOOTPRINT.Remove(pad)` and `BOARD.Remove(<drawing or group>)` free the object
+out from under the swig wrapper: the test appears to pass and a *later* test
+dies with a segmentation fault, which reads as a gate bug rather than a test
+bug.  Every socket case below renames, moves, renumbers or adds instead.
 """
 import os
 import sys
@@ -36,14 +43,26 @@ def board():
 
 
 def _failures(board):
-    return check_board.geometry(board)
+    """Every rule check_board.py asserts on a loaded board."""
+    return check_board.geometry(board) + check_board.xiao_socket(board)
 
 
-def _mount(board, ref):
+def _fp(board, ref):
     for fp in board.GetFootprints():
         if fp.GetReference() == ref:
             return fp
     raise AssertionError(f"the committed board has no {ref}")
+
+
+def _pad(fp, number):
+    for p in fp.Pads():
+        if p.GetNumber() == number:
+            return p
+    raise AssertionError(f"{fp.GetReference()} has no pad {number}")
+
+
+def _mount(board, ref):
+    return _fp(board, ref)
 
 
 def _says(failures, ref, text):
@@ -143,6 +162,171 @@ def test_a_shrunk_mounting_hole_fails(board):
     pad = next(iter(fp.Pads()))
     pad.SetDrillSize(pcbnew.VECTOR2I(pcbnew.FromMM(2.2), pcbnew.FromMM(2.2)))
     _says(_failures(board), "H4", "mm drill, spec is 3.2 mm")
+
+
+# ------------------------------------------------------------ the socket pair --
+# The rules that made this board's inherited defect visible.  J1/J2 used to be
+# two free 1x7 headers 6.1 mm apart; the module needs 15.24 mm.  Every case here
+# breaks one thing check_board.xiao_socket() measures.
+def test_the_socket_pair_is_one_locked_group(board):
+    """The honest shape of the fix: one group, both rows locked, 15.24 apart."""
+    spec = gen_pcb.XIAO
+    groups = [g for g in board.Groups() if g.GetName() == gen_pcb.XIAO_GROUP]
+    assert len(groups) == 1, [g.GetName() for g in board.Groups()]
+    members = sorted(i.GetReference() for i in groups[0].GetItems()
+                     if isinstance(i, pcbnew.FOOTPRINT))
+    assert members == sorted(spec["rows"])
+    for ref in spec["rows"]:
+        fp = _fp(board, ref)
+        assert fp.IsLocked(), f"{ref} must be locked"
+        cols = {round(pcbnew.ToMM(p.GetPosition().x), 4) for p in fp.Pads()}
+        assert len(cols) == 1, f"{ref} is not a straight column: {cols}"
+    xs = sorted(round(pcbnew.ToMM(_pad(_fp(board, r), "1").GetPosition().x), 4)
+                for r in spec["rows"])
+    assert xs[1] - xs[0] == pytest.approx(spec["row_sep"], abs=0.01)
+
+
+def test_the_rows_too_close_fail(board):
+    """The defect this board shipped with, put back."""
+    fp = _fp(board, "J2")
+    p = fp.GetPosition()
+    fp.SetPosition(pcbnew.VECTOR2I(p.x - pcbnew.FromMM(9.14), p.y))
+    _mentions(_failures(board), "a XIAO needs 15.24 mm")
+
+
+def test_a_pin_that_is_not_in_the_row_fails(board):
+    """A row with a hole that is not one of the module's 7 pins.
+
+    Not simulated by deleting a pad: `FOOTPRINT.Remove(pad)` frees the pad out
+    from under the swig wrapper and the interpreter dies later, in a different
+    test, looking like a gate bug.  Renumbering is the same defect to the gate
+    and leaves the binding alive.
+    """
+    _pad(_fp(board, "J1"), "4").SetNumber("8")
+    _says(_failures(board), "J1", "a XIAO row is 1..7")
+
+
+def test_an_extra_pin_fails(board):
+    fp = _fp(board, "J1")
+    src = _pad(fp, "1")
+    p = pcbnew.PAD(fp)
+    p.SetNumber("8")
+    p.SetAttribute(pcbnew.PAD_ATTRIB_PTH)
+    p.SetShape(pcbnew.PAD_SHAPE_CIRCLE)
+    p.SetSize(pcbnew.VECTOR2I(pcbnew.FromMM(1.7), pcbnew.FromMM(1.7)))
+    p.SetDrillSize(pcbnew.VECTOR2I(pcbnew.FromMM(1.0), pcbnew.FromMM(1.0)))
+    q = src.GetPosition()
+    p.SetPosition(pcbnew.VECTOR2I(q.x, q.y + pcbnew.FromMM(7 * 2.54)))
+    fp.Add(p)
+    _mentions(_failures(board), "a XIAO row is 7 (7 + 7 = the module's 14)")
+
+
+def test_a_reversed_row_fails(board):
+    """A row in the other way round fires the wrong pin and nothing else sees it."""
+    fp = _fp(board, "J1")
+    fp.SetOrientationDegrees(180)       # the footprint's origin is its pad 1
+    _says(_failures(board), "J1", "the row is in the other way round")
+
+
+def test_a_row_in_the_other_way_round_by_number_fails(board):
+    """The same defect without moving anything: pad 1 and pad 7 swapped."""
+    fp = _fp(board, "J1")
+    for a, b in (("1", "7"), ("2", "6"), ("3", "5")):
+        pa, pb = _pad(fp, a), _pad(fp, b)
+        na, nb = pa.GetNumber(), pb.GetNumber()
+        pa.SetNumber(nb)
+        pb.SetNumber(na)
+    failures = _failures(board)
+    _says(failures, "J1", "the row is in the other way round")
+    _mentions(failures, "one row is reversed relative to the other")
+
+
+def test_a_part_inside_the_module_envelope_fails(board):
+    src = "/usr/share/kicad/footprints/Resistor_SMD.pretty"
+    fp = pcbnew.FootprintLoad(src, "R_0805_2012Metric")
+    assert fp is not None
+    x0, y0, x1, y1 = gen_pcb.xiao_envelope()
+    fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM((x0 + x1) / 2),
+                                   pcbnew.FromMM((y0 + y1) / 2)))
+    board.Add(fp)
+    _mentions(_failures(board), "reaches to")
+
+
+def test_a_wrong_pitch_fails(board):
+    p = _pad(_fp(board, "J1"), "5")
+    q = p.GetPosition()
+    p.SetPosition(pcbnew.VECTOR2I(q.x, q.y + pcbnew.FromMM(0.7)))
+    _mentions(_failures(board), "the module's pitch is 2.54 mm")
+
+
+def test_a_row_out_of_the_group_fails(board):
+    group = next(g for g in board.Groups() if g.GetName() == gen_pcb.XIAO_GROUP)
+    group.RemoveItem(_fp(board, "J2"))
+    _mentions(_failures(board), "the socket rows are ['J1', 'J2']")
+
+
+def test_a_missing_group_fails(board):
+    """Renamed rather than deleted: removing a board-owned group is unsafe.
+
+    To the gate a group under another name is a socket pair that is no longer
+    one object, which is the defect.
+    """
+    group = next(g for g in board.Groups() if g.GetName() == gen_pcb.XIAO_GROUP)
+    group.SetName("J1_J2_loose")
+    _mentions(_failures(board), "0 group(s) with that name")
+
+
+def test_an_unlocked_row_fails(board):
+    _fp(board, "J2").SetLocked(False)
+    _says(_failures(board), "J2", "not locked")
+
+
+def test_swapped_rows_fail(board):
+    """Reproducible: the module's left column must be the left row."""
+    a, z = _fp(board, "J1"), _fp(board, "J2")
+    pa, pz = a.GetPosition(), z.GetPosition()
+    a.SetPosition(pcbnew.VECTOR2I(pz.x, pa.y))
+    z.SetPosition(pcbnew.VECTOR2I(pa.x, pz.y))
+    _says(_failures(board), "J1", "right of J2")
+
+
+def test_a_missing_envelope_fails(board):
+    """The keepout marker is what a reviewer looks for; parked off-layer = gone."""
+    rect = next(d for d in board.GetDrawings()
+                if d.GetLayer() == pcbnew.F_CrtYd)
+    rect.SetLayer(pcbnew.F_Fab)         # not deleted: removing a board-owned
+    _mentions(_failures(board), "0 rectangle(s) on F.CrtYd")   # item is unsafe
+
+
+def test_a_moved_envelope_fails(board):
+    rect = next(d for d in board.GetDrawings()
+                if d.GetLayer() == pcbnew.F_CrtYd)
+    rect.Move(pcbnew.VECTOR2I(pcbnew.FromMM(2), pcbnew.FromMM(2)))
+    _mentions(_failures(board), "the F.CrtYd rectangle is")
+
+
+def test_a_socket_hole_that_is_too_small_fails(board):
+    p = _pad(_fp(board, "J2"), "3")
+    p.SetDrillSize(pcbnew.VECTOR2I(pcbnew.FromMM(0.6), pcbnew.FromMM(0.6)))
+    _mentions(_failures(board), "mm hole, spec is 1 mm")
+
+
+def test_an_smd_socket_pad_fails(board):
+    _pad(_fp(board, "J1"), "6").SetAttribute(pcbnew.PAD_ATTRIB_SMD)
+    _mentions(_failures(board), "the module's pins need a hole to go in")
+
+
+def test_a_socket_pad_on_the_wrong_net_fails(board):
+    """The pins the geometry has to agree with: D1 is the trigger, and 5V/GND
+    are the first two of the right-hand column -- so swapping them is the
+    right column running the other way, which nothing else would catch."""
+    a, z = _pad(_fp(board, "J2"), "1"), _pad(_fp(board, "J2"), "2")
+    five, gnd = board.GetNetsByName()["+5V_XIAO"], board.GetNetsByName()["GND"]
+    a.SetNet(gnd)
+    z.SetNet(five)
+    failures = _failures(board)
+    _says(failures, "J2.1", "the intent for this pin is")
+    _says(failures, "J2.2", "the intent for this pin is")
 
 
 # ------------------------------------------------- the rule the router obeys --
