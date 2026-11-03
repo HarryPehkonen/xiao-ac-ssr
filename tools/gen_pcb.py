@@ -32,36 +32,52 @@ def mm(v):
 
 
 # ---------------------------------------------------------------- placement --
-# Board is 130 x 90 mm in three vertical zones.  Mains lives on the left;
-# PS1, U2 and U1 straddle the middle zone because their own creepage is the
-# barrier; logic sits on the right.  Parts are *packed* inside their zone
+# Board is 150 x 45 mm in five vertical strips.  Mains lives on the left;
+# PS1 and U2 straddle the middle strip because their own creepage is the
+# barrier; logic sits on the right.  Parts are *packed* inside their strip
 # (row by row, no overlaps by construction) rather than hand-placed, so the
 # same script keeps working when the part list changes.
+#
+# A strip is (x0, y0, x1): packing starts at y0 and wraps to a new row once it
+# would cross x1.  Rows run downwards until the part list is exhausted, so the
+# board height is sized around the packed result (see BOARD_H) instead of the
+# packing being fenced in by a height chosen first.
 GROUPS = [
     # mains: cord in -> fuse -> protection -> cord out, with the triac beside
     # the outlet so its load pad (Q1.2) is a short hop from J4.  The dimmer's
     # board failed to route LOAD_L when the triac sat at the far end of the
     # mains strip; here the ordering puts them together.
-    ((4, 6, 50, 90), [("J3", 0), ("F1", 0), ("MOV1", 0), ("J4", 0), ("Q1", 0)]),
+    ((4, 6, 50), [("J3", 0), ("F1", 0), ("MOV1", 0), ("J4", 0), ("Q1", 0)]),
     # the triac's gate resistor, in its own strip against the barrier: it is
     # mains-referenced (gate-side of the opto) so it owes logic 3 mm
-    ((52, 6, 58, 90), [("R4", 90)]),
+    ((52, 6, 58), [("R4", 90)]),
     # parts that straddle the barrier, U2 first so its logic pins face the
     # logic-side cluster and its mains pins face the resistor strip
-    ((62, 6, 96, 90), [("U2", 180), ("PS1", 0)]),
+    ((62, 6, 96), [("U2", 180), ("PS1", 0)]),
     # logic-side resistors and the 5 V rail, right of the barrier
-    ((100, 6, 126, 90), [("R3", 90), ("D5", 0), ("C1", 0), ("C2", 0)]),
-    ((130, 6, 147, 90), [("J1", 0), ("J2", 0)]),
+    ((100, 6, 126), [("R3", 90), ("D5", 0), ("C1", 0), ("C2", 0)]),
+    ((130, 6, 147), [("J1", 0), ("J2", 0)]),
 ]
 MARGIN = 2.5          # mm between packed parts
-BOARD_W, BOARD_H = 150.0, 95.0
+# The outline is sized to the packed parts, not chosen up front.  The 14 parts
+# span 33.8 mm (first row top at y = 6, deepest part at y = 39.8).  45 mm keeps
+# that 6 mm at the top and leaves 5.2 mm below the last row -- 15% spare on that
+# side, the same rule the dimmer's 57 mm came from (Harri's tolerance is
+# 10-20%, and this board is the sibling of that one).  150 x 45 mm = 67.5 cm2,
+# down from 150 x 95 mm = 142.5 cm2, which the board carried because it was
+# built before the calibration existed.
+#
+# The measured floor for this part list is 40 mm (11/11 routed, DRC clean);
+# 39 mm starts warning.  45 stays clear of it rather than spending a reroute
+# defending 5 mm.
+BOARD_W, BOARD_H = 150.0, 45.0
 
 
 def place_all(fps):
     """Pack each group's parts into rows inside its zone.  Returns
     {ref: (x, y, rot)} for reporting."""
     out = {}
-    for (x0, y0, x1, y1), parts in GROUPS:
+    for (x0, y0, x1), parts in GROUPS:
         cx, cy, rowh = x0, y0, 0.0
         for ref, rot in parts:
             fp = fps[ref]

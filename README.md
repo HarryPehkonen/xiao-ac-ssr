@@ -11,9 +11,10 @@ the whole mains front end, the XIAO sockets, the generator/router pipeline and
 the gates are copied; the switching element and everything that existed only to
 support *dimming* are replaced.
 
-**Status: schematic and board complete and machine-checked. Gerbers exported
-but not yet eyeballed in a gerber viewer and not yet checked by a fab's DFM
-rules.**
+**Status: schematic and board complete and machine-checked. The board is
+150 × 45 mm (67.5 cm²), 11/11 nets routed, DRC clean — 0 errors, 0 warnings.
+Gerbers exported but not yet eyeballed in a gerber viewer and not yet checked by
+a fab's DFM rules.**
 
 ## Why an SSR and not a relay
 

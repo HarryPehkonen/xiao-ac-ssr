@@ -88,7 +88,8 @@ current <0.2 A.
 
 ## Mechanical — mounting
 
-The board has **no mounting holes yet** (same status as the dimmer). Adding them
+The board has **no mounting holes yet** — the dimmer has had four since `a32a414`
+and this board, built before that, never picked them up. Adding them
 is a small change to `tools/gen_pcb.py`, not a redesign:
 
 - 4 × M3 clearance holes (3.2 mm drill) in the corners, **5 mm inset** from the
@@ -101,6 +102,16 @@ is a small change to `tools/gen_pcb.py`, not a redesign:
   entirely.
 - Adding holes means re-running the router: the corner keepouts change the
   available corridors. Cheap now that the gate is known-good.
+
+## Mechanical — board outline
+
+**150 × 45mm (67.5cm²)**, down from 150 × 95mm (142.5cm²). The 14 parts span
+33.8mm top to bottom (y 6 → 39.8mm), so the old 95mm left a **55mm dead band
+along the bottom edge** — more than half the board. The outline was inherited
+from the dimmer, which had raised its own height to 95mm while the router was
+failing; this board was generated from that state, so it inherited the dead band
+without ever having had the failure. See `BOARD_H` in `tools/gen_pcb.py`, and
+`docs/PCB-NOTES.md` for the measured floor.
 
 ## Mechanical — thermal
 

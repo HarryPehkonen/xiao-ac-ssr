@@ -20,7 +20,11 @@ import os
 import pcbnew
 
 GRID = 0.5                      # mm
-W, H = 150.0, 95.0              # mm, board size
+W, H = 150.0, 45.0              # mm, board size.  Must track gen_pcb.py's
+                                # BOARD_W / BOARD_H: this grid *is* the board,
+                                # so a stale H would let the router lay copper
+                                # past the edge (DRC would flag it, but only
+                                # after the fact).
 # Mains-referenced nets: the triac gate circuit is on the hot side of the
 # opto, so MOC_MT2 and TRIAC_G carry mains potential and owe logic 3 mm too.
 # Classifying them as signal made them demand 3 mm from the mains zone they

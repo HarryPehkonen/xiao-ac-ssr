@@ -8,7 +8,8 @@ schematic about connectivity.
 ## What works
 
 - 14 footprints placed by the zone packer (mains / barrier / logic) on a
-  150 × 95 mm outline. No courtyard overlaps.
+  150 × 45 mm outline. No courtyard overlaps. The outline is sized to the
+  packed parts — see "Board size" below.
 - **11 of 11 nets routed** from `kicad-cli sch export netlist`: 137 track
   segments, 6 vias, 794 mm of copper (the longest net is GND at 158 mm).
   106 segments on F.Cu, 31 on B.Cu; widths used are 1.5 mm (mains), 0.6 mm
@@ -21,6 +22,33 @@ schematic about connectivity.
 - **The committed board is the generated board**: `tools/check_regen.py`, the
   fifth gate, regenerates in a throwaway copy of `tools/` and compares every
   footprint and copper item against `xiao-ac-ssr.kicad_pcb` (14 and 143 today).
+
+## Board size
+
+**150 × 45 mm = 67.5 cm²**, down from **150 × 95 mm = 142.5 cm²**.
+
+The board was built as the dimmer's sibling, so it inherited the dimmer's
+outline — and with it the dimmer's dead band. Its 14 parts span **33.8 mm**
+vertically (y 6 → 39.8 mm), so 95 mm was carrying **55 mm of empty board** below
+the last row (plus the router's unused corridors above and below it). Nothing
+had flagged it, because the outline is an input to the pipeline, not a result of
+it.
+
+The height is now sized around the packed parts (`BOARD_H` in
+`tools/gen_pcb.py` carries the reasoning), by the same rule the dimmer's 57 mm
+came from:
+
+- **Height 45 mm.** 6 mm above the first row, 33.8 mm of parts, 5.2 mm below the
+  last row — **15% spare on that side**, inside the 10-20% tolerance.
+- **Width stays 150 mm.** The parts span 135.7 mm, already ~10% over.
+- **The floor is 40 mm.** Shrinking removes the router's spare corridors, so a
+  smaller board is a *new* routing claim: 40, 41, 42, 43, 44 and 45 mm were each
+  regenerated end-to-end and each reported **11/11 nets** with 0 DRC errors and
+  0 warnings. 39 mm is where it starts warning. 45 is used rather than 40 —
+  five spare millimetres are not worth chasing the minimum.
+- **Nothing else changed:** the placement, the 3 mm barrier rule, the 137 track
+  segments and 6 vias are the same as at 95 mm, and `check_regen.py` still finds
+  the committed board identical to the generated one.
 
 ## Reproducibility — what is and is not exact
 
