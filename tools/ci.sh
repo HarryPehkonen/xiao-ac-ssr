@@ -1,9 +1,10 @@
 #!/bin/sh
-# Gate for this repo.  Four checks, all machine-verifiable:
+# Gate for this repo.  Five checks, all machine-verifiable:
 #   1. the committed schematic is exactly what the generator produces
 #   2. the netlist exported from it equals the intended netlist
 #   3. ERC reports no violations
 #   4. the board passes DRC with no violations
+#   5. the committed board is the one the generator produces (placement + copper)
 # Run from anywhere:  ./tools/ci.sh
 set -eu
 cd "$(dirname "$0")/.."
@@ -26,5 +27,13 @@ kicad-cli sch erc --severity-all --exit-code-violations \
 
 echo "== board DRC"
 /usr/bin/python3 tools/check_board.py
+
+echo "== committed board matches the generator"
+# Quiet when it passes (pcbnew prints image-handler noise on stdout), loud when
+# it fails -- which is the only time a person needs to read it.
+/usr/bin/python3 tools/check_regen.py > /dev/null 2>&1 || {
+    /usr/bin/python3 tools/check_regen.py
+    exit 1
+}
 
 echo "OK"

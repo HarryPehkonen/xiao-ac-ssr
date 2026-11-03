@@ -164,6 +164,12 @@ with the LED's forward drop taken at its datasheet maximum rather than typical.
 - `tools/check_board.py` — `kicad-cli pcb drc`: **0 errors, 0 warnings**, with
   the 3 mm mains/logic barrier and the 1.5 mm mains width enforced as `kicad_dru`
   rules rather than as good intentions.
+- `tools/check_regen.py` — the committed board is the generated board: 14/14
+  footprints and 143/143 copper items identical after a regeneration in a
+  throwaway copy of `tools/`. The board file itself is not byte-reproducible
+  (pcbnew UUIDs, write order), so this compares geometry — the part a person
+  would have had to edit. `docs/PCB-NOTES.md` has the measurement and the
+  teeth demonstration.
 - `tools/gen_pcb.py` — 11/11 nets routed from the schematic netlist, so the
   board cannot disagree with the design about connectivity.
 

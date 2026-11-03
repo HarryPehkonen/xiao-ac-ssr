@@ -73,6 +73,12 @@ a generated one can (see Gates).
 3. **ERC clean.** `kicad-cli sch erc` reports 0 violations.
 4. **Board DRC clean.** `tools/check_board.py` — 0 errors, 0 warnings, including
    the 3 mm mains/logic clearance rule in `xiao-ac-ssr.kicad_dru`.
+5. **Board == generator.** `tools/check_regen.py` regenerates the board in a
+   throwaway copy of the tools and compares every footprint and every copper
+   item against the committed board — 14 footprints and 143 tracks+vias today.
+   The board file is not *byte*-reproducible (pcbnew stamps fresh UUIDs and
+   writes items in its own order), so this compares geometry, which is the part
+   a person would have had to edit. `docs/PCB-NOTES.md` has the measurement.
 
 Fabrication data:
 
@@ -147,8 +153,11 @@ tools/gen_pcb.py           placement + board generator
 tools/route.py             the maze router
 tools/check_netlist.py     gate: exported netlist == intended netlist
 tools/check_board.py       gate: kicad-cli pcb drc, exit 0 = no violations
+tools/check_regen.py       gate: committed board == generated board (geometry)
 tools/ci.sh                the gates
 tools/gerbers.sh           fab output (gerbers, drill, zip)
+tools/preview.sh           schematic svg/pdf + board svg, for human eyes
+tools/zipdir.py            zip the gerber bundle (zip(1) is not installed here)
 docs/PCB-NOTES.md          board status, and what the router needed
 docs/ninny-brief.md        the next slice, briefed for a test-first agent
 DESIGN.md                  engineering decisions and open items

@@ -13,7 +13,8 @@ Everything is generated headless; there is no GUI on this machine.
 | `tools/gen_pcb.py` | places footprints (zone packer) and routes the board |
 | `tools/route.py` | the maze router (A* over a 0.5 mm grid, two layers, vias) |
 | `tools/check_board.py` | gate: `kicad-cli pcb drc`, exit 0 = no violations |
-| `tools/ci.sh` | the gate: schematic staleness + netlist + ERC + board DRC |
+| `tools/check_regen.py` | gate: committed board == generated board (placement + copper) |
+| `tools/ci.sh` | the gate: schematic staleness + netlist + ERC + board DRC + board regen |
 | `xiao-ac-ssr.kicad_pcb` | GENERATED — never hand-edit it |
 | `xiao-ac-ssr.kicad_dru` | custom DRC rules (the mains isolation barrier, the 1.5 mm mains width) |
 
@@ -23,8 +24,14 @@ Toolchain: `kicad-cli` and `pcbnew` 9.0.2, the Python bindings only under
 ## The red test — this is the whole task
 
 ```
-/usr/bin/python3 tools/check_board.py --mains-width 2.0   # does not exist yet; see below
+MAINS_WIDTH_MM=2.0 /usr/bin/python3 tools/gen_pcb.py && /usr/bin/python3 tools/check_board.py
 ```
+
+That exits 1 today. `MAINS_WIDTH_MM` is an environment override in
+`tools/route.py` that drives both the trace width and the `.kicad_dru` floor, so
+"would a wider trace route?" is a single command rather than an edit/run/revert
+dance. (Remember to regenerate at the default afterwards: the two commands above
+leave a 2.0 mm board and its rule on disk.)
 
 The board is gated and green **at 1.5 mm mains copper**. It is *not* green at
 2.0 mm, and that is the thing to fix: the load current has to reach the triac's
@@ -110,7 +117,10 @@ fail before you touch anything.
 
 - Both `WIDTH_MAINS = 2.0` and `WIDTH_MAINS = 1.5` route completely and are
   DRC-clean (0 errors, 0 warnings).
-- `./tools/ci.sh` passes (schematic staleness, netlist == intent, ERC, board).
+- `./tools/ci.sh` passes — all five gates, including `check_regen.py`, which
+  means the committed board still matches the generator after your change (two
+  unrelated routes succeeding is the failure mode where a fix is really a
+  different layout).
 - The new router tests pass, including the empty-channel case.
 - `git diff --stat` shows **no** change to `xiao-ac-ssr.kicad_dru` and no change
   to the nets in `tools/gen_sch.py`.
