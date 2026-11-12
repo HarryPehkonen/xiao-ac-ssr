@@ -16,6 +16,40 @@ support *dimming* are replaced.
 Gerbers exported but not yet eyeballed in a gerber viewer and not yet checked by
 a fab's DFM rules.**
 
+## Ordering — DigiKey CA (as ordered 2026-11, four boards)
+
+Part numbers as actually ordered and verified against this board's footprints. `qty` is what was
+ordered for four boards; `need` is what four boards consume. HLK-PM01 (`PS1`) is an AliExpress part,
+not a DigiKey line.
+
+| qty | need | DigiKey PN | MPN | Role |
+|---|---|---|---|---|
+| 4 | 4 | `497-BTA16-600SWRG-ND` | BTA16-600SWRG | `Q1` triac — **logic-level gate (I_GT 10 mA)**, required by the zero-cross window |
+| 4 | 4 | `MOC3063M-ND` | MOC3063M | `U2` zero-cross opto-triac, DIP-6, 5 mA I_FT (sets `R3` = 150 Ω) |
+| 10 | 8 | `36-3512P-ND` | Keystone 3512P | `F1` fuse clips, 2 per board — the footprint is drawn for this pattern |
+| 5 | 4 | `283-2931-ND` | `BK/S505-3.15-R` | `F1` fuse: 3.15 A 250 V ceramic **HBC** (1500 A @ 250 VAC) time-lag 5×20 mm |
+| 4 | 4 | `495-6591-1-ND` | B72214S0151K551 | `MOV1` S14K150 varistor, 14 mm disc |
+| 4 | 4 | `493-15239-1-ND` | UHE1E471MPD1TD | `C1` 470 µF 25 V, φ8 × 20 mm, 3.5 mm pitch, 7000 h @ 105 °C |
+| 4 | 4 | `BC5229CT-ND` | K104K15X7RF5UH5 | `C2` 0.1 µF 50 V X7R radial, 5.0 mm pitch |
+| 4 | 4 | `1801-1N5819CT-ND` | 1N5819 | `D5` Schottky 40 V 1 A, DO-41 (through-hole) |
+| 10 | 4 | `150XBK-ND` | MFR-25FBF52-150R | `R3` 150 Ω 1/4 W — opto LED current |
+| 10 | 4 | `13-MFR-25FTE52-360RCT-ND` | MFR-25FTE52-360R | `R4` 360 Ω 1/4 W — gate resistor |
+| 5 | 4 | `1597-113991054-ND` | 113991054 | XIAO ESP32C3 (**C3**, not S3/C6) |
+| 2 | 2 | `1597-102010490-ND` | 102010490 | 7-pin male headers for the XIAO (5-pack) |
+| 10 | 8 | `S7005-ND` | PPTC071LFBN-RC | `J1`,`J2` 1×7 2.54 mm sockets |
+| 10 | 8 | `732-10955-ND` | 691137710002 | `J3`,`J4` 5.00 mm 2-position screw blocks (16 A/300 V) |
+
+**Open footprint defect — `MOV1`.** KiCad's `Varistor.pretty/RV_Disc_D12mm_W4.5mm_P7.5mm` staggers
+its pads (`pad 1 at 0 0`, `pad 2 at 7.5 1.8`), so the two holes sit on a diagonal 7.71 mm apart and
+a straight-lead disc varistor cannot seat without bending a lead. The footprint is also drawn for a
+12 mm disc while the ordered part is 14 mm — lateral clearance is fine (9.13 mm to the nearest
+foreign copper; a 14 mm disc needs 7.00 mm), so the staggered holes are the only defect. Redraw
+`MOV1` as a straight 7.5/0 pattern in `tools/gen_pcb.py`, regenerate, and re-run `./tools/ci.sh`
+before the next fabrication run.
+
+Assembly verification, first power-up and troubleshooting — with expected meter readings — live in
+[`BRINGUP.md`](BRINGUP.md).
+
 ## Why an SSR and not a relay
 
 Mechanical relay contact life at rated load is ~10⁵ operations; 100
