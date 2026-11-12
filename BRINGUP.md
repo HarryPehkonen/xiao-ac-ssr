@@ -20,7 +20,7 @@ Four boards' worth, plus spares. `qty` is what was ordered; `need` is what four 
 | 4 | 4 | `MOC3063M-ND` | MOC3063M | Zero-cross opto-triac, 600 V, DIP-6. onsemi grade (5 mA I_FT), so `R3` = 150 Ω stays valid. |
 | 10 | 8 | `36-3512P-ND` | 3512P | Keystone fuse clips, 2 per board. The `F1` footprint is drawn for **this** clip pattern. |
 | 5 | 4 | `283-2931-ND` | `BK/S505-3.15-R` | 3.15 A 250 V ceramic **high-breaking-capacity** (1500 A @ 250 VAC) time-lag 5×20 mm. A glass low-breaking fuse (e.g. Littelfuse 218) is *not* equivalent for mains service. |
-| 4 | 4 | `495-6591-1-ND` | B72214S0151K551 | Varistor S14K150 (EPCOS/TDK), 14 mm disc. |
+| 4 | 4 | `495-1411-ND` | B72214S0151K101 | Varistor S14K150 (EPCOS/TDK), 14 mm disc, **straight leads, bulk**. Do NOT substitute the `K551` number: TDK's taping/packaging document lists it as `S14K150G5S5` — **crimped leads, style S5, taping mode G5** (hence DigiKey's cut-tape `-1-ND` suffix) — while `K101` is the bulk straight-lead part the electrical tables tabulate and the one the footprint was checked against. If `K551` parts are already on hand, compare the leads to Figure 1 (straight) versus Figure 4 (S5, crimped) before soldering. |
 | 4 | 4 | `493-15239-1-ND` | UHE1E471MPD1TD | `C1` 470 µF 25 V, φ8 × 20 mm, **3.5 mm lead spacing**, 7000 h @ 105 °C. Fits the `D8.0mm_P3.50mm` footprint exactly. |
 | 4 | 4 | `BC5229CT-ND` | K104K15X7RF5UH5 | `C2` 0.1 µF 50 V X7R radial, **5.0 mm lead spacing**, 3.0–3.8 mm body. |
 | 4 | 4 | `1801-1N5819CT-ND` | 1N5819 | `D5` Schottky 40 V 1 A, DO-204AL (**DO-41**, through-hole) — matches the axial footprint. |

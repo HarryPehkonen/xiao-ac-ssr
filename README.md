@@ -28,7 +28,7 @@ not a DigiKey line.
 | 4 | 4 | `MOC3063M-ND` | MOC3063M | `U2` zero-cross opto-triac, DIP-6, 5 mA I_FT (sets `R3` = 150 Ω) |
 | 10 | 8 | `36-3512P-ND` | Keystone 3512P | `F1` fuse clips, 2 per board — the footprint is drawn for this pattern |
 | 5 | 4 | `283-2931-ND` | `BK/S505-3.15-R` | `F1` fuse: 3.15 A 250 V ceramic **HBC** (1500 A @ 250 VAC) time-lag 5×20 mm |
-| 4 | 4 | `495-6591-1-ND` | B72214S0151K551 | `MOV1` S14K150 varistor, 14 mm disc |
+| 4 | 4 | `495-1411-ND` | B72214S0151K101 | `MOV1` S14K150 varistor, 14 mm disc, **straight leads, bulk** |
 | 4 | 4 | `493-15239-1-ND` | UHE1E471MPD1TD | `C1` 470 µF 25 V, φ8 × 20 mm, 3.5 mm pitch, 7000 h @ 105 °C |
 | 4 | 4 | `BC5229CT-ND` | K104K15X7RF5UH5 | `C2` 0.1 µF 50 V X7R radial, 5.0 mm pitch |
 | 4 | 4 | `1801-1N5819CT-ND` | 1N5819 | `D5` Schottky 40 V 1 A, DO-41 (through-hole) |
