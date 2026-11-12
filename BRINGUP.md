@@ -32,22 +32,21 @@ Four boards' worth, plus spares. `qty` is what was ordered; `need` is what four 
 | 10 | 8 | `732-10955-ND` | 691137710002 | `J3`,`J4` 2-position side-entry screw blocks, 5.00 mm pitch, 16 A/300 V. |
 | — | 4 | *(AliExpress)* | HLK-PM01 | `PS1` 5 V 0.6 A isolated AC-DC module. Not a DigiKey line. |
 
-### Known footprint issue — `MOV1` (fix before the next fabrication run)
+### `MOV1` — the staggered pads are CORRECT (do not "fix" them)
 
-KiCad's own `Varistor.pretty/RV_Disc_D12mm_W4.5mm_P7.5mm` places its two pads **diagonally**:
+KiCad's `Varistor.pretty/RV_Disc_D12mm_W4.5mm_P7.5mm` places pad 2 at `(7.5, 1.8)`, i.e. the two holes are
+7.71 mm apart on a diagonal rather than in one line. **That is the real part.** The datasheet's side view
+(TDK/EPCOS SIOV StandarD series §3.2; outline `VAR0586-W-E`) shows the two leads offset **along the thickness
+axis** — one at the front face, one at the back — straight and of equal length. The offset scales with the
+body: ≈ (thickness − lead ⌀)/2, so (4.5 − 0.8)/2 = 1.85 mm against KiCad's 1.80.
 
-```
-(pad "1" thru_hole circle  (at 0 0)
-(pad "2" thru_hole circle  (at 7.5 1.8)
-```
+An earlier revision of this document called this a defect and straightened the pads; that was wrong and it
+was reverted. Straightening would have required bending a lead on a part that seats as designed, and it made
+DRC report `lib_footprint_mismatch` — which is precisely the check that catches a footprint drifting from an
+unmodified library part. **Treat that warning as guilty until proven.**
 
-Measured on the board: pad 1 at (6.53, 24.25), pad 2 at (14.03, 26.05) — 7.50 mm apart in x
-**and 1.80 mm apart in y**, i.e. 7.71 mm diagonally. A straight-lead disc varistor (the ordered
-S14K150 has coplanar leads 7.5 mm apart) therefore **cannot seat without bending one lead**.
-The footprint is also drawn for a 12 mm disc while the part is 14 mm; lateral clearance is fine
-(nearest foreign copper is 9.13 mm from the lead centre, a 14 mm disc needs 7.00 mm), so the
-*only* defect is the staggered holes. Fix: redraw `MOV1` as a straight 7.5/0 pattern in
-`tools/gen_pcb.py`, regenerate, and re-run `./tools/ci.sh`.
+Note the ordering-code trap: digit 13 = 1 means "standard, straight leads", i.e. *uncrimped* — **not**
+coplanar. A crimped/trimmed variant (digit 13 ≠ 1) is a different lead geometry.
 
 ---
 

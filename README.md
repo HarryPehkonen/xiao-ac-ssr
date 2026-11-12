@@ -39,13 +39,19 @@ not a DigiKey line.
 | 10 | 8 | `S7005-ND` | PPTC071LFBN-RC | `J1`,`J2` 1×7 2.54 mm sockets |
 | 10 | 8 | `732-10955-ND` | 691137710002 | `J3`,`J4` 5.00 mm 2-position screw blocks (16 A/300 V) |
 
-**Open footprint defect — `MOV1`.** KiCad's `Varistor.pretty/RV_Disc_D12mm_W4.5mm_P7.5mm` staggers
-its pads (`pad 1 at 0 0`, `pad 2 at 7.5 1.8`), so the two holes sit on a diagonal 7.71 mm apart and
-a straight-lead disc varistor cannot seat without bending a lead. The footprint is also drawn for a
-12 mm disc while the ordered part is 14 mm — lateral clearance is fine (9.13 mm to the nearest
-foreign copper; a 14 mm disc needs 7.00 mm), so the staggered holes are the only defect. Redraw
-`MOV1` as a straight 7.5/0 pattern in `tools/gen_pcb.py`, regenerate, and re-run `./tools/ci.sh`
-before the next fabrication run.
+**`MOV1` is correct as drawn — do NOT "fix" it.** KiCad's `Varistor.pretty/RV_Disc_*` footprints stagger
+their two pads (the D12/W4.5/P7.5 variant: `pad 2 at (7.5, 1.8)`), and the datasheet shows exactly that
+geometry: in the side view the two leads are offset **along the thickness axis** — one at the front face,
+one at the back — both straight and of equal length. The offset matches the body: ≈ (thickness − lead ⌀)/2,
+i.e. (4.5 − 0.8)/2 = 1.85 mm against KiCad's 1.80 (the pattern holds across the family: (4.2 − 0.8)/2 = 1.70
+vs 1.63, (5.1 − 0.8)/2 = 2.15 vs 2.30). Sources: TDK/EPCOS SIOV StandarD series §3.2 "Standard, straight
+leads" (Figure 1) and the side-view outline `VAR0586-W-E`.
+
+Consequence for the gates: the footprint is an **unmodified library part**, and DRC enforces that — moving a
+pad makes `lib_footprint_mismatch` fire immediately. Treat that warning as *guilty until proven*: it fired
+here when a "fix" straightened the pads to what looked like a line, and the correct resolution was to revert
+the change, not to silence the check. "Straight leads" in the ordering code (digit 13 = 1) means *uncrimped*,
+**not** coplanar.
 
 Assembly verification, first power-up and troubleshooting — with expected meter readings — live in
 [`BRINGUP.md`](BRINGUP.md).
