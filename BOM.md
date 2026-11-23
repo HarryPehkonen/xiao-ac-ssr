@@ -175,6 +175,46 @@ By load type:
   capacitor is worst-case inrush. The triac survives it; the load may not.
 - **Never DC** — a triac has no commutation of its own and latches on until the current stops.
 
+## Reaching 1500 W — what it would actually take
+
+1500 W at 120 V is **12.5 A**. Four separate limits move, and the heatsink is only one of them.
+
+**Thermal.** `Q1` dissipates ~13.5 W (datasheet model, `V_TO` 0.85 V + `R_D` 25 mΩ) to ~17.5 W
+(Figure 2's max curve) at 12.5 A. With `R_th(j-c)` = 2.1 °C/W for the insulated BTA, holding the
+junction at 110 °C in 50 °C box air needs a heatsink of **~2 °C/W** — a 100 mm-class finned
+extrusion, not a clip-on. A **fan only helps if the box breathes**: in a sealed box it stirs the
+same air, and 15 W in a 100 × 70 × 40 mm box raises the internal air 45–110 °C above room
+(45 °C at h = 12 W/m²K, 109 °C at h = 5). That cooks `C1` (7000 h @ 105 °C) and passes the
+module's 85 °C rating. **At this power the enclosure decides, and ventilation is not optional.**
+
+**Copper — the limit that makes it a different board.** 12.5 A by IPC-2221, external layer:
+
+| copper | 10 °C rise | 30 °C rise |
+| --- | --- | --- |
+| 1 oz | 9.8 mm | 5.0 mm |
+| 2 oz | 4.9 mm | 2.5 mm |
+| 3 oz | 3.3 mm | 1.7 mm |
+
+This board's router tops out at **1.5 mm** today, and `docs/ninny-brief.md` exists to teach it a
+necked pad entry for **2.0 mm = 3.95 A ≈ 475 W** — that is the entire scope of the improvement.
+1500 W is not a widening; the load current has to leave the PCB.
+
+**Fuse, terminals, cord, branch circuit.** `F1` 3.15 A → 16 A HBC in the same 5×20 clips; the
+Phoenix MKDS 1,5 is rated 13.5 A (93 % of it at 12.5 A) so a 20–24 A block is the right swap; 12 AWG
+cord; and 12.5 A is **past the 80 % continuous rule on a 15 A circuit** (12 A / 1440 W), so a 20 A
+branch circuit is part of the requirement.
+
+**The two sane routes to 1500 W.**
+
+1. **Switch a contactor coil** — a 20 A definite-purpose contactor draws ~5–10 VA on its coil, needs
+   no heatsink, and this board switches it within its existing limits (a coil is exactly the
+   inductive load the `SW` part is specified for). 1500 W never touches the PCB.
+2. **Drive an external SSR** — a 40 A chassis puck (~$15–25). Note it brings its own thermal job:
+   at 12.5 A and `V_TM` ~1.6 V it dissipates ~20 W, so it needs a ~2 °C/W heatsink too.
+
+Either way the board becomes the pilot. Adding a fan and a heatsink to *this* board fixes the
+smallest of the four limits and leaves copper, fuse and branch circuit exactly where they were.
+
 ## Ordering note — the current ceiling
 
 `F1` stays at 3.15 A, which is what 1.5 mm/1 oz copper carries at a 10 °C rise
