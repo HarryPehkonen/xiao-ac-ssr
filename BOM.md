@@ -141,6 +141,40 @@ drop times load current, roughly 1.0–1.2 V at 1 A:
 - `PS1`, `MOV1` and the fuse are thermally irrelevant at this power level.
 - Ventilation in the box is worth more than a bigger heatsink.
 
+## What this board can switch
+
+Both bounds come from parts, not from opinion:
+
+- **Ceiling: 3.15 A ≈ 375 W at 120 V** — `F1`'s rating and the 1.5 mm mains copper (3.21 A by
+  IPC-2221, 1 oz, 10 °C rise). The triac is a 16 A part and is never the limit.
+- **Floor: about 10 W at 120 V** — a triac only stays on above its holding current, and it only
+  latches above its latching current: `BTA16-600SW` is `I_H` 15 mA, `I_L` 25–30 mA max, which at
+  120 V is 2–4 W. Below that the load may refuse to latch or drop out at the next zero crossing.
+  Very small LED lamps are the usual victims; test them rather than assuming.
+
+| load | `I(rms)` | in `Q1` | ΔT on a bare TO-220 | verdict |
+| --- | --- | --- | --- | --- |
+| 60 W lamp | 0.50 A | ~0.7–1.0 W | 40–60 °C | no heatsink needed |
+| 100 W lamp | 0.83 A | ~1.0–1.4 W | 60–85 °C | works; in a sealed box add a clip-on heatsink or a vent — `T_j` max is 125 °C |
+| 375 W (the ceiling) | 3.12 A | ~4 W | — | real heatsink required (~5 °C/W, tab-mounted) |
+| 1500 W | 12.5 A | ~18 W | — | **not this board.** 4× the fuse; and 12.5 A is past the 80 % continuous rule on a 15 A branch circuit (12 A / 1440 W) |
+
+`R_th(j-a)` = 60 °C/W is the datasheet's own TO-220 figure, no heatsink; `I_TSM` is 160–168 A for
+20 ms, so inrush (a cold lamp filament, a motor start) is never the thing that limits you.
+Continuous current is.
+
+By load type:
+
+- **Resistive** (lamps, heaters, elements) — what the board is for. It switches at the zero
+  crossing and only there, which is why it is quiet and why it cannot dim.
+- **Inductive** (fans, small motors, transformers) — the `SW` suffix is ST's recommendation for
+  inductive loads (commutation `(dI/dt)c` 8.5 A/ms, no snubber). Note its *static* `dV/dt` is the
+  family's lowest at 40 V/µs; a `CW`/`BW` part has 500/1000 V/µs and costs R4 = 220 Ω, as the
+  swap table above says. This board has no RC snubber across `Q1`.
+- **Capacitive-input SMPS** as the load — the awkward case: zero-cross turn-on into an empty
+  capacitor is worst-case inrush. The triac survives it; the load may not.
+- **Never DC** — a triac has no commutation of its own and latches on until the current stops.
+
 ## Ordering note — the current ceiling
 
 `F1` stays at 3.15 A, which is what 1.5 mm/1 oz copper carries at a 10 °C rise
