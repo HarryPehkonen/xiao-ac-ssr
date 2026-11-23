@@ -53,3 +53,6 @@ git pull && ./tools/ci.sh     # expect: gates OK, 0 errors, 0 warnings
 ```
 
 Design rationale lives in `DESIGN.md`; the on-disk board notes are in `docs/PCB-NOTES.md`.
+Taking it to a finished, approved product (the Code's approval rule, SPE-1000 field evaluation,
+the applicable standards, and why the XIAO is the wrong part for that) is in
+`docs/PRODUCTIZING.md`.
