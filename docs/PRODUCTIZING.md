@@ -42,6 +42,48 @@ assembly.
    interesting part (the control logic) live in low voltage. Zero certification burden for
    personal use, and it becomes a product decision only if the *combination* is sold.
 
+### Route 3 in practice — and the load ceiling that comes with it
+
+The whole mains side becomes one purchase: a **listed** (look for cUL/cULus/CSA/ETL on a
+Canadian purchase) 15 A smart plug with a **local** control path and **metering**. Confirmed
+candidates: TP-Link **Kasa KP115** (UL, 15 A / 1800 W, energy monitoring, local protocol — no
+cloud needed, and it keeps working with the internet blocked) and Shelly's **UL-marked** line
+(Plus 1PM UL / 1PM Gen4 UL, ~$26–27 USD; their local API, MQTT and on-device scripting suit
+custom logic better). Roughly **$25–45 CAD**, and the controller on the other side needs no
+approval at all if it runs from a listed Class 2/LPS supply — that exemption sits next to the
+approval rule.
+
+**The ceiling is the heater, and it is not the plug's fault.** "15 A" is a peak number: the
+wiring rules derate continuous loads to 80 %, i.e. **12 A / 1440 W**, and a 1500 W heater draws
+**12.5 A for hours**. This is the canonical "do not put a space heater on an adapter" case —
+many heater manuals forbid adapters outright, and electrician-facing guidance says plug heaters
+straight into the wall. Under ~1200 W a listed metering plug is routine; at 1500 W the honest
+answer is a heater with its own thermostat and timer, plugged straight in.
+
+**Metering is the upgrade over this board.** The plug reports actual power, so the control logic
+can tell "commanded off" from "actually off" — the one failure mode a fuse cannot see.
+
+**Confirmed model, and the cloud-free path.** The one Shelly that is both UL-marked and a *plug*
+is the **Shelly Plug US Gen4** ($21.24 USD on Shelly's US store at the time of writing, reg
+$24.99; 2-pack $44.99). NEMA 5-15 in and out, 15 A, "max output power 1800 W (**resistive load
+only**)", duty type S1, 10 000 switching cycles, and it meters volts, amps, watts, energy and its
+own internal temperature. Wi-Fi + BLE + Zigbee, ESP-Shelly-C68F, with on-device scripting, MQTT,
+webhooks and a documented local RPC API (HTTP/WebSocket).
+
+Cloud is optional and switchable at the device rather than tied to an account: the unit boots
+into its own access point, you browse **192.168.33.1**, join it to the network, and **decline the
+cloud prompt** — then in its web UI, *Settings → Cloud: off* (the default is **on**, so this is the
+step not to miss) and Bluetooth off with it. Everything afterwards is LAN: local RPC, MQTT, UDP,
+webhooks, on-device schedules. For a guarantee rather than a promise, put it on an IoT VLAN with
+no internet route — and accept the trade: no firmware updates and no time sync, so keep the
+scheduling logic on your side.
+
+For a Canadian purchase, check the mark carries the **"c"** (cUL/cULus) or is CSA/ETL. A US-only
+UL mark is not Canadian approval. The other UL-marked Shellies (Plus 1PM, 1PM Gen4 UL,
+Pro 1/1PM/2PM, the wall dimmers, the input-only i4) are *installed components* — behind a switch,
+in a DIN panel, or in a wall — so they put the assembly back in your hands and are not
+plug-and-play.
+
 ## The standards the box would have to be "approved for"
 
 Which one applies is the certification body's first call, because it follows from what the thing
