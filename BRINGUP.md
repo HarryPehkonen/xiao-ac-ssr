@@ -66,6 +66,12 @@ coplanar. A crimped/trimmed variant (digit 13 ≠ 1) is a different lead geometr
 A2/A3 together verify the design rule *switch the hot, keep the neutral continuous* — the most
 safety-relevant property of an inline switch, and a 10-second check.
 
+**Two resistors, same package, ten of each in the kit — do not swap them.** `R3` = **150 Ω** (the
+LED feed) and `R4` = **360 Ω** (the triac gate). 360 Ω in `R3` passes 5.05 mA: 1.01× the MOC3063's
+5 mA max trigger, i.e. no margin at all, and it would not trigger cold. 150 Ω in `R4` would
+over-drive the gate. Check both against the silkscreen before power — measured `R3` values are in
+section B.
+
 ## B. Logic side — no mains. Verify the drive path before anything gets hot
 
 Power the XIAO from **USB with mains disconnected**. `PS1` is not involved — the module's own

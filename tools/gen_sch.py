@@ -220,9 +220,14 @@ PARTS = [
     {"ref": "J2", "lib": SYMLIB + ":XIAO_ESP32C3_Right", "val": XIAO_ROWS[1]["value"],
      "fp": SOCK7, "at": (255, 100, 0), "pins": {"1": "+5V_XIAO", "2": "GND"},
      "nc": ["3", "4", "5", "6", "7"], "ref_dy": -12.7, "val_dy": 12.7},
-    # trigger: GPIO3 (D1) -> 150R -> MOC3063 LED.  150R puts ~12 mA through the
-    # LED against the part's 5 mA max I_FT (7.5 mA at -40 C), so it triggers
-    # cold and triggers on a sagging 3V3 rail.
+    # trigger: GPIO3 (D1) -> 150R -> MOC3063 LED.  Measured 2026-11-25: 10.1 mA
+    # (1.51 V across R3; the pin sits at 2.695 V under load, i.e. it sags 0.605 V
+    # into its own ~60 ohm source impedance).  Against the part: ~2.0x the 5 mA
+    # max I_FT at 25 C and 1.35x the ~7.5 mA worst case at -40 C -- so it triggers
+    # cold, and it still triggers on a sagging 3V3 rail.
+    # Count the pin impedance when resizing: I = (V_rail - V_LED) / (R3 + R_pin).
+    # The earlier "~12 mA" estimate ignored it.  Do NOT fit 360R here -- 5.05 mA
+    # is 1.01x I_FT, i.e. no margin, and it would not trigger cold.
     {"ref": "R3", "lib": "Device:R", "val": "150", "fp": R_AX,
      "at": (220, 190, 0), "pins": {"1": "GATE_DRV", "2": "MOC_A"}},
     # U2: zero-cross opto-triac.  Its output conducts only inside the zero
