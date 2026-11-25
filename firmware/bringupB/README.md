@@ -57,5 +57,7 @@ asserts the pin) before it can pass.
   `PS1`, no mains, nothing to insulate.
 - **Pin choice.** D1/GPIO3 has no strapping role and no on-board load, and the module's antenna is
   on a U.FL pigtail, so it is one of Seeed's "safe general" pins.
-- **Reproducibility.** `platform` and the Arduino core are currently unpinned; once a build works,
-  record the versions (`pio pkg list`) in the ini so a machine in five years gets the same binary.
+- **Reproducibility.** Built and verified on 2026-11-25 with **PlatformIO Core 6.2.0 / espressif32
+  @ 8.0.0 / Arduino-ESP32 core 3.3.12** (RISC-V toolchain 14.2.0): `firmware.bin` 276,448 B,
+  RAM 4.1%, flash 20.2%. `platform` is pinned to 8.0.0 in the ini so a machine in five years
+  builds the same binary; bump it deliberately, not by accident.
