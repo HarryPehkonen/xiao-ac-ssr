@@ -144,10 +144,11 @@ triac. Nothing else is needed to prove the board works.
 The board's control input is trivial: **drive D1 (GPIO3) high to turn the load ON, low to turn it
 OFF.** Active high — the GPIO sources the LED current through `R3`. A working project that does
 exactly this is in **`firmware/bringupB/`** (PlatformIO, `framework = arduino`, no libraries).
+**`docs/PLATFORMIO.md`** is the day-to-day command reference for driving that toolchain yourself —
+build, upload, monitor, and the failures worth recognising on sight.
 
-Recommended toolchain for the C3 on a headless Debian box: **ESP-IDF v5.x**, installed from
-Espressif's installer (it brings its own Python venv and toolchain, so nothing system-wide is
-touched):
+The vendor path, if you want it later rather than now: **ESP-IDF v5.x**, installed from Espressif's
+installer (it brings its own Python venv and toolchain, so nothing system-wide is touched):
 
 ```bash
 # one time
