@@ -66,6 +66,18 @@ Run these inside `firmware/bringupB/`, or from anywhere with `-d <dir>`.
 | flash succeeds, monitor stays silent | nothing has printed yet, or the wrong speed | tap RESET to see the boot banner; check `monitor_speed` |
 | port reported busy | another monitor, or ModemManager, holds it | close the other monitor; PlatformIO's udev rules set `ID_MM_DEVICE_IGNORE` for this board |
 | no port at all | charge-only cable, or the board is asleep | swap the cable — the C3 needs a data cable |
+| `Could not open /dev/ttyS0: the port is busy or doesn't exist` / `Permission denied` on **ttyS0** | **the board isn't on the bus**, so PlatformIO fell back to the first serial port it could find — `ttyS0` is a legacy placeholder with no hardware behind it | plug the board in (`ls -l /dev/ttyACM0`), or pin it: `pio run -t upload --upload-port /dev/ttyACM0` |
+
+**PlatformIO guesses, and its guess is bad.** With no matching USB device present,
+`pio run -t upload` does not stop and complain — it picks the first serial port it can see, which is
+normally a phantom `/dev/ttyS0`. A `Permission denied` there is a red herring: the real fault is a
+board that isn't attached. The kernel says which it is:
+
+    journalctl -k --since "-5 min" | grep -iE "usb|ttyACM"
+
+A healthy board appears as `idVendor=303a, idProduct=1001` / `Product: USB JTAG/serial debug unit`
+followed by `cdc_acm 3-1:1.0: ttyACM0: USB ACM device`. `journalctl -k -f` while you plug it in
+shows the enumeration live — and if the cable is marginal, the errors show up there too.
 
 ## This project's loop
 
