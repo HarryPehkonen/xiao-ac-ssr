@@ -23,9 +23,10 @@ static const uint8_t PIN_BOOT = D9;  // GPIO9 — BOOT button, 10k pull-up on th
 static const uint32_t BLINK_MS = 1000;  // 1 s on / 1 s off: slow enough for a DMM to settle
 static const uint32_t DEBOUNCE_MS = 50;
 
-enum Mode : uint8_t { MODE_BLINK, MODE_ON, MODE_OFF };
+// Order is the BOOT-button cycle, and the first value is the state the pin boots in.
+enum Mode : uint8_t { MODE_OFF, MODE_ON, MODE_BLINK };
 
-static Mode mode = MODE_BLINK;
+static Mode mode = MODE_OFF;  // fail-safe: the load stays off until it is asked for
 static bool gateHigh = false;
 static uint32_t lastToggle = 0;
 static uint32_t lastButtonChange = 0;
@@ -110,7 +111,7 @@ void setup() {
   Serial.println("  commands: 1 = hold on, 0 = hold off, b = blink, s = status   (BOOT button cycles)");
   report("booted: GPIO3 driven low before anything else");
 
-  setMode(MODE_BLINK);
+  setMode(MODE_OFF);  // fail-safe default: ON takes a deliberate command or button press
   lastButtonLevel = digitalRead(PIN_BOOT);
 }
 

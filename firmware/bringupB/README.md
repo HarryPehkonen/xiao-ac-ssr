@@ -10,8 +10,9 @@ pio run -t upload          # mains disconnected, USB-C only
 pio device monitor         # 115200; s = status, 1 = on, 0 = off, b = blink
 ```
 
-Or just press the **BOOT** button: short presses cycle BLINK → HOLD_ON → HOLD_OFF. Holding the
-state is the point — a static reading beats watching a 1 Hz square wave on a DMM.
+Or just press the **BOOT** button: short presses cycle HOLD_OFF → HOLD_ON → BLINK, so the first press
+from boot turns the pin **on**. Holding the state is the point — a static reading beats watching a
+1 Hz square wave on a DMM.
 
 ## What it drives, and where to measure
 

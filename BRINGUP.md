@@ -123,7 +123,7 @@ If more current is ever wanted, raise the pin's drive strength (`gpio_set_drive_
 
 **Verify the fail-safe default while you are still here** (section E, row 1): with the pin held **on**,
 press **RESET** and watch `R3`. It must read ~0 V through the boot — the module's pin is an input
-until the firmware drives it — and the sketch then comes up in BLINK. Recording that reading turns
+until the firmware drives it — and the sketch then comes up **off**, with the pin low. Recording that reading turns
 "we decided the board boots off" into "we measured it".
 
 ## C. Mains and load — with a **real load**, never open-circuit
