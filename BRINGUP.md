@@ -148,8 +148,12 @@ void app_main(void) {
 }
 ```
 
-Alternatives if ESP-IDF feels heavy: PlatformIO (same C, simpler build) or Arduino-ESP32
-(`digitalWrite`) — both work, but ESP-IDF is the vendor-supported path and needs no wrapper.
+**Two axes, not one.** *Framework* is ESP-IDF (vendor-supported; every Espressif API page assumes
+it) or Arduino-ESP32 (`digitalWrite`, `WiFi.h`, `esp_now.h` — far less ceremony). *Build system* is
+what puts a binary on the board: PlatformIO (versions pinned per project in `platformio.ini`,
+CLI-first and headless — `pio run`, `pio run -t upload`, `pio device monitor`, `pio test`) or the
+Arduino IDE's GUI. PlatformIO drives either framework, so the two compose: `framework = arduino`
+for speed now, `framework = espidf` later in the same project shape.
 Flashing happens over USB-C with **mains disconnected**; the XIAO's USB and the HLK's 5 V are
 isolated from each other by `D5` on this board, but do not test that distinction with mains live.
 
