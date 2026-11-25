@@ -104,11 +104,22 @@ purpose — WiFi transmit bursts (~250 mA) share the ground system with this 12 
 
 | # | Measurement | Expected | Measured |
 |---|---|---|---|
-| B1 | Across `R3` (150 Ω), GPIO3 **high** | **10–14 mA** — 1.5–2.1 V across 150 Ω. The MOC3063 triggers at ≤5 mA, so ≥2× margin at the low end. Measured 2026-11-25: GPIO3 3.3 V, **1.51 V** → 10.1 mA | 1.51 V / 10.1 mA |
+| B1 | Across `R3` (150 Ω), GPIO3 **high** | **10–14 mA** — 1.5–2.1 V across 150 Ω. The MOC3063 triggers at ≤5 mA, so ≥2× margin at the low end | 1.51 V / 10.1 mA (2026-11-25) |
 | B2 | Across `R3`, GPIO3 **low** | ~0 V | ~0 V (2026-11-25, via the monitor's `0`) |
-| B3 | `U2` pin 1 to pin 2, powered | the LED's own forward drop while conducting — ~1.2–1.8 V. Read it **at the same moment as B1**: B1 + B3 should equal the GPIO voltage. If they sum to ~3.3 V the pin is solid and the LED drop is real; if they sum to ~2.9 V the pin is sagging under load (normal for a C3 at 10 mA) | |
+| B3 | `U2` pin 1 to pin 2, powered | the LED's own forward drop — ~1.2 V for an IR emitter at this current | **1.180 V** (2026-11-25) |
 
 B1 is the number to write down: it proves GPIO → R3 → LED end to end with no mains present.
+
+**B1 + B3 = 2.695 V, not 3.3 V — the pin sags.** At 10.1 mA the C3's GPIO3 sits at 2.695 V rather
+than the rail: **0.605 V across the pin's own output stage, ~60 Ω effective.** The `3V3` *pad* still
+reads a solid 3.3 V — the droop is at the driven pin, and it is normal for this MCU.
+
+Consequence for anyone resizing `R3`: **calculate with `V_GPIO` ≈ 2.7 V, not 3.3 V.** The naive
+`(3.3 − V_LED)/R` predicts 14.1 mA and the board delivers 10.1 mA. That is still 2× the MOC3063's
+≤5 mA trigger, so nothing needs changing here — but a later design that assumed a solid pin would
+size `R3` wrong, and a weak pin plus a low-value resistor is how an LED current gets overestimated.
+If more current is ever wanted, raise the pin's drive strength (`gpio_set_drive_capability`,
+5/10/20/40 mA) rather than shrinking `R3`.
 
 **Verify the fail-safe default while you are still here** (section E, row 1): with the pin held **on**,
 press **RESET** and watch `R3`. It must read ~0 V through the boot — the module's pin is an input

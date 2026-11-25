@@ -37,9 +37,9 @@ Put the **red probe on pad 1** and you read a positive voltage when GPIO3 is hig
 
 | state | across R3 | means |
 | --- | --- | --- |
-| HIGH | **~1.8–2.1 V** → 12–14 mA | (3.3 V − ~1.2 V LED) / 150 Ω. The MOC3063 needs ~5 mA to trigger, so there is ~2.5× margin |
+| HIGH | **1.5 V → 10.1 mA** (measured) | `(2.7 V at the pin − 1.18 V LED) / 150 Ω`. The pin **sags ~0.6 V** at 10 mA, so size the current with `V_GPIO` ≈ 2.7 V, never 3.3 V. Margin over the MOC3063's ≤5 mA trigger: 2× |
 | low | **~0 V** | no LED current |
-| `U2` pin 1 → pin 2, HIGH | ~1.2 V | the LED itself conducting (BRINGUP B3) |
+| `U2` pin 1 → pin 2, HIGH | **1.180 V** | the LED itself conducting (BRINGUP B3) |
 
 **A blank XIAO reads 0 V across R3 and that is not a fault.** With no application firmware,
 GPIO3 is an unconfigured input — it drives nothing. B1 needs this sketch (or any sketch that
