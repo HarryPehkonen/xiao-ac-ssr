@@ -6,6 +6,9 @@ svg/
 # KiCad local state
 build/
 __pycache__/
+
+# PlatformIO (firmware/)
+.pio/
 *.kicad_prl
 fp-info-cache
 *-backups/

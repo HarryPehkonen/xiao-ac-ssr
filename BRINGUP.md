@@ -68,7 +68,39 @@ safety-relevant property of an inline switch, and a 10-second check.
 
 ## B. Logic side — no mains. Verify the drive path before anything gets hot
 
-Power the XIAO from **USB with mains disconnected**.
+Power the XIAO from **USB with mains disconnected**. `PS1` is not involved — the module's own
+3.3 V rail runs this whole section.
+
+### Finding GPIO3 and `R3` before you measure anything
+
+The board prints `J1`/`J2` at the **pin-1 end**, and pin 1 is the **USB-C end** of the module.
+Only three of the fourteen pads carry a net:
+
+| socket pad | module label | GPIO | net on this board |
+| --- | --- | --- | --- |
+| **`J1.2`** | **D1** | **GPIO3** | `GATE_DRV` → `R3` pad 1 |
+| `J2.1` | 5V (VBUS) | — | `+5V_XIAO` |
+| `J2.2` | GND | — | `GND` |
+| all the others | D0, D2–D6, D7–D10 | — | unconnected |
+
+So there is nothing to count along a row hoping to land on the right pad — **find `J1` pad 2 by
+continuity**: buzz it against the two pads of `R3`, and the one that beeps is pad 1, the GPIO end.
+`R3` stands vertically, so its pads sit one above the other: **pad 1 (`GATE_DRV`) is the lower pad,
+pad 2 (`MOC_A`, the opto LED end) is the upper one.** Red probe on the lower pad reads positive
+when GPIO3 is high.
+
+D1/GPIO3 was a deliberate choice worth knowing: no strapping role and no on-board load, so nothing
+fights it at reset (Seeed's "safe general" pins are D1–D5 and D10).
+
+### Why a fresh XIAO reads 0 V across `R3`
+
+With no application firmware loaded, GPIO3 is an **unconfigured input** — high impedance, driving
+nothing. ~0 V across `R3` is therefore the correct reading, and B1 cannot pass until something
+asserts the pin. That is the normal state, not a fault: check it off as "no firmware yet".
+
+`firmware/bringupB/` is a PlatformIO project that holds, flips or blinks the pin on command, so
+B1/B2 become two static readings instead of a race with a blinking signal. It carries no radio on
+purpose — WiFi transmit bursts (~250 mA) share the ground system with this 12 mA measurement.
 
 | # | Measurement | Expected | Measured |
 |---|---|---|---|
@@ -101,16 +133,17 @@ triac. Nothing else is needed to prove the board works.
 
 | Symptom | Next check |
 |---|---|
-| B1 shows ~0 V with GPIO high | Wrong GPIO in firmware (must be **D1 = GPIO3**), or the opto is in backwards (pin 1 marking), or a bad `R3` joint. |
+| B1 shows ~0 V with GPIO high | First: **is any firmware actually loaded?** A blank XIAO leaves GPIO3 floating and reads 0 V. Then: wrong pin in the firmware (it must be **D1 = GPIO3**), the pin configured as an input, the opto in backwards (pin 1 marking), or a bad `R3` joint. |
 | LED driven (B1 ≈ 12 mA) but the triac never turns on | Load not connected / no holding current; or an open joint on the gate or MT1. |
 | Triac always on | Shorted triac, or a solder bridge across MT1–MT2 — A3 finds it cold. |
 | Works, then drops out under load | Thermal or overload: check the fuse, then the tab temperature. |
 | Triac hot to touch in service | Normal is warm: ~1–3 V drop at load current = 3–5 W. Too hot to hold (>70 °C case) means load or heatsink, not a marginal part. |
 
-## E. Firmware and toolchain (nothing installed yet)
+## E. Firmware and toolchain
 
 The board's control input is trivial: **drive D1 (GPIO3) high to turn the load ON, low to turn it
-OFF.** Active high — the GPIO sources the LED current through `R3`.
+OFF.** Active high — the GPIO sources the LED current through `R3`. A working project that does
+exactly this is in **`firmware/bringupB/`** (PlatformIO, `framework = arduino`, no libraries).
 
 Recommended toolchain for the C3 on a headless Debian box: **ESP-IDF v5.x**, installed from
 Espressif's installer (it brings its own Python venv and toolchain, so nothing system-wide is
