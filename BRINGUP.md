@@ -153,6 +153,19 @@ Alternatives if ESP-IDF feels heavy: PlatformIO (same C, simpler build) or Ardui
 Flashing happens over USB-C with **mains disconnected**; the XIAO's USB and the HLK's 5 V are
 isolated from each other by `D5` on this board, but do not test that distinction with mains live.
 
+### Fail-safe defaults — decide these before writing the firmware
+
+| condition | behaviour | why |
+| --- | --- | --- |
+| power-up / reset / brownout | **load OFF** — GPIO3 driven low before any radio init | a switch that boots "on" energises the load every time the mains blips |
+| control link lost (no packet for N s) | **hold the last commanded state** | the load may be something that must not change state unannounced, and the triac gives no feedback either way |
+| firmware hang | hardware watchdog reset → boots off again (row 1) | a hung loop must not be able to leave the load latched on and the link silent |
+| the user wants it *actually* off | **the cord switch** | a triac fails short; no firmware can promise "off" |
+
+Verify row 1 as part of section B, with the meter across `R3`: after a reset the LED current must
+read ~0 mA (B2) and only rise to ~12 mA once the firmware commands it on. That measurement *is*
+the boot state — it is not something to assume from the source.
+
 ## F. Safety
 
 - First mains test on a **GFCI outlet**; never work on it live; the case is not a substitute for
