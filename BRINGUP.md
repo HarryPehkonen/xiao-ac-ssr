@@ -104,11 +104,16 @@ purpose — WiFi transmit bursts (~250 mA) share the ground system with this 12 
 
 | # | Measurement | Expected | Measured |
 |---|---|---|---|
-| B1 | Across `R3` (150 Ω), GPIO3 **high** | ~2.1 V → **~12 mA** into the opto LED (the MOC3063 needs ~5 mA to trigger) | |
-| B2 | Across `R3`, GPIO3 **low** | ~0 V | |
-| B3 | `U2` pin 1 to pin 2, powered | ~1.2 V (LED conducting) when high | |
+| B1 | Across `R3` (150 Ω), GPIO3 **high** | **10–14 mA** — 1.5–2.1 V across 150 Ω. The MOC3063 triggers at ≤5 mA, so ≥2× margin at the low end. Measured 2026-11-25: GPIO3 3.3 V, **1.51 V** → 10.1 mA | 1.51 V / 10.1 mA |
+| B2 | Across `R3`, GPIO3 **low** | ~0 V | ~0 V (2026-11-25, via the monitor's `0`) |
+| B3 | `U2` pin 1 to pin 2, powered | the LED's own forward drop while conducting — ~1.2–1.8 V. Read it **at the same moment as B1**: B1 + B3 should equal the GPIO voltage. If they sum to ~3.3 V the pin is solid and the LED drop is real; if they sum to ~2.9 V the pin is sagging under load (normal for a C3 at 10 mA) | |
 
 B1 is the number to write down: it proves GPIO → R3 → LED end to end with no mains present.
+
+**Verify the fail-safe default while you are still here** (section E, row 1): with the pin held **on**,
+press **RESET** and watch `R3`. It must read ~0 V through the boot — the module's pin is an input
+until the firmware drives it — and the sketch then comes up in BLINK. Recording that reading turns
+"we decided the board boots off" into "we measured it".
 
 ## C. Mains and load — with a **real load**, never open-circuit
 
