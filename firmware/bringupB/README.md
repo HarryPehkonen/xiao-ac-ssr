@@ -47,6 +47,11 @@ asserts the pin) before it can pass.
 
 ## Notes
 
+- **There is no light to watch.** The XIAO ESP32C3 has no user LED — its only LED is the charge
+  indicator, which is hardware, not firmware — so this project reports over serial and through the
+  pin. "Blinking" here means `GATE_DRV` toggling at 1 Hz: one serial line per second, and across
+  `R3` an alternation between ~1.8–2.1 V and ~0 V. Read it with `pio device monitor`, not `cat` —
+  the monitor asserts DTR the way the board's USB-CDC expects, and a raw read gets throttled output.
 - **No radio on purpose.** The ESP32's WiFi transmitter draws ~250 mA bursts in the same ground
   system as a 12 mA measurement, and it would put noise on every reading of `R3`. It is also why
   this project has no credentials: there is nothing to hard-code.
